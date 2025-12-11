@@ -27,8 +27,9 @@ export interface ToolLLMConfig {
 const STORAGE_KEY = 'socialsage_daily_quota';
 const DAILY_LIMIT = 10; // 每日限制 10 次
 
-// 服务端配额 API
-const QUOTA_API_URL = 'http://ssageai.dropshare.tech';
+// 服务端配额 API（暂时禁用，使用本地 localStorage 方案）
+// const QUOTA_API_URL = 'http://ssageai.dropshare.tech';
+const QUOTA_API_URL = '';
 
 // ============================================
 // Quota Management
