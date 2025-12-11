@@ -20,9 +20,8 @@ const SYSTEM_API_KEYS: string[] = [
 const DAILY_LIMIT = 10; // 每日限制 10 次
 const STORAGE_KEY = 'socialsage_daily_quota';
 
-// 服务端配额 API（Cloudflare Worker）
-// 部署后更新为实际的 Worker URL
-const QUOTA_API_URL = ''; // 例如: 'https://socialsage-quota-api.your-subdomain.workers.dev'
+// 服务端配额 API
+const QUOTA_API_URL = 'http://ssageai-backend-lsr4y2-ce0400-107-174-250-34.traefik.me';
 
 // Localized Error Messages for Quota
 const QUOTA_MESSAGES: Record<string, string> = {
