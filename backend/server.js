@@ -202,8 +202,8 @@ app.use((req, res) => {
     });
 });
 
-// 启动服务器
-app.listen(PORT, () => {
+// 启动服务器 - 绑定到 0.0.0.0 以接受外部连接
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 SocialSage Quota API running on port ${PORT}`);
     console.log(`📊 Daily limit: ${DAILY_LIMIT} requests per IP`);
     console.log(`📁 Data directory: ${DATA_DIR}`);
