@@ -1,0 +1,22 @@
+{
+    "name": "socialsage-quota-api",
+    "version": "1.0.0",
+    "description": "SocialSage AI - IP-based quota management API",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js",
+        "cf:dev": "wrangler dev --local",
+        "cf:deploy": "wrangler deploy"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.2"
+    },
+    "devDependencies": {
+        "wrangler": "^3.0.0"
+    },
+    "engines": {
+        "node": ">=16"
+    }
+}
