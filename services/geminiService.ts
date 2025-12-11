@@ -21,7 +21,7 @@ const DAILY_LIMIT = 10; // 每日限制 10 次
 const STORAGE_KEY = 'socialsage_daily_quota';
 
 // 服务端配额 API
-const QUOTA_API_URL = 'http://ssageai-backend-lsr4y2-ce0400-107-174-250-34.traefik.me';
+const QUOTA_API_URL = 'http://ssageai.dropshare.tech';
 
 // Localized Error Messages for Quota
 const QUOTA_MESSAGES: Record<string, string> = {
