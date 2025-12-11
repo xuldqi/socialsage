@@ -8,10 +8,10 @@ RUN npm install --production
 COPY server.js .
 RUN mkdir -p /app/data
 
-ENV PORT=8080
+ENV PORT=9876
 ENV DAILY_LIMIT=10
 ENV DATA_DIR=/app/data
 
-EXPOSE 8080
+EXPOSE 9876
 
 CMD ["node", "server.js"]
