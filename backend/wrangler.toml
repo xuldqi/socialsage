@@ -1,0 +1,14 @@
+name = "socialsage-quota-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# KV 命名空间配置
+# 运行以下命令创建：wrangler kv:namespace create "QUOTA_STORE"
+# 然后将输出的 id 填入下方
+kv_namespaces = [
+  { binding = "QUOTA_STORE", id = "YOUR_KV_NAMESPACE_ID" }
+]
+
+[vars]
+DAILY_LIMIT = "10"
+CORS_ORIGIN = "*"

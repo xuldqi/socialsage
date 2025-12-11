@@ -1,0 +1,5 @@
+{
+  "name": "SocialSage AI",
+  "description": "A Chrome Extension dashboard simulator for AI-powered social media management. Features style mimicry (personas), auto-reply rules, and content polishing for platforms like X, Weibo, and Xiaohongshu.",
+  "requestFramePermissions": []
+}
