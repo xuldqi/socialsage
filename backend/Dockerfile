@@ -15,16 +15,16 @@ COPY server.js .
 RUN mkdir -p /app/data
 
 # 设置环境变量
-ENV PORT=3000
+ENV PORT=8080
 ENV DAILY_LIMIT=10
 ENV DATA_DIR=/app/data
 
 # 暴露端口
-EXPOSE 3000
+EXPOSE 8080
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 # 启动服务
 CMD ["npm", "start"]
