@@ -513,6 +513,84 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
         }
     }, [chatInput]);
 
+    // Auto-trigger AI when quickActionPrompt is set (from selection popup or context menu)
+    const lastQuickActionRef = useRef<string>('');
+    useEffect(() => {
+        const prompt = (context as any).quickActionPrompt;
+        if (prompt && prompt !== lastQuickActionRef.current) {
+            lastQuickActionRef.current = prompt;
+            // Add user message (the prompt) and trigger AI response
+            const userMsgId = Date.now().toString();
+            setMessages(prev => [...prev, {
+                id: userMsgId,
+                role: 'user',
+                content: prompt,
+                timestamp: Date.now()
+            }]);
+
+            // Trigger AI response
+            setTimeout(() => {
+                handleQuickActionAI(prompt);
+            }, 100);
+        }
+    }, [(context as any).quickActionPrompt]);
+
+    // Handle quick action AI request
+    const handleQuickActionAI = async (prompt: string) => {
+        setIsChatting(true);
+        const streamingId = Date.now().toString();
+        setStreamingMessageId(streamingId);
+        setMessages(prev => [...prev, {
+            id: streamingId,
+            role: 'assistant',
+            content: '',
+            timestamp: Date.now()
+        }]);
+
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
+        try {
+            let accumulatedContent = '';
+            const response = await processUserIntentStream(
+                prompt,
+                personas,
+                rules,
+                settings.selectedModel,
+                { ...getAiConfig(), signal: abortController.signal },
+                { type: context.pageData?.type, url: context.pageData?.url, hasSelection: true },
+                messages,
+                (chunk: string) => {
+                    accumulatedContent += chunk;
+                    setMessages(prev => prev.map(m =>
+                        m.id === streamingId
+                            ? { ...m, content: accumulatedContent }
+                            : m
+                    ));
+                }
+            );
+
+            setMessages(prev => prev.map(m =>
+                m.id === streamingId
+                    ? { ...m, content: response.responseMessage, reasoning: response.reasoning }
+                    : m
+            ));
+            getRemainingQuota().then(setRemainingQuota);
+        } catch (e: any) {
+            if (e.name !== 'AbortError') {
+                setMessages(prev => prev.map(m =>
+                    m.id === streamingId
+                        ? { ...m, content: `⚠️ ${e.message || '处理失败'}` }
+                        : m
+                ));
+            }
+        } finally {
+            setIsChatting(false);
+            setStreamingMessageId(null);
+            abortControllerRef.current = null;
+        }
+    };
+
     const logBus = (from: ExtensionMessage['from'], to: ExtensionMessage['to'], type: ExtensionMessage['type'], payload: any) => {
         const safePayload = JSON.parse(JSON.stringify(payload));
         if (safePayload.apiKey) safePayload.apiKey = 'sk-******';
