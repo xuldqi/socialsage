@@ -187,20 +187,43 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
 
   // Handle selection popup action from content script
   if (message.type === 'SELECTION_POPUP_ACTION') {
-    getSettings().then(settings => {
-      if (!settings.enableSelectionPopup) return;
+    console.log('[Background] Received SELECTION_POPUP_ACTION:', message);
 
-      chrome.sidePanel.open({ tabId: sender.tab.id }).then(() => {
+    getSettings().then(async (settings) => {
+      if (!settings.enableSelectionPopup) {
+        console.log('[Background] Selection popup disabled');
+        return;
+      }
+
+      try {
+        // Get the current active tab
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tabId = sender?.tab?.id || tabs[0]?.id;
+
+        if (!tabId) {
+          console.error('[Background] No tab id found');
+          return;
+        }
+
+        console.log('[Background] Opening side panel for tab:', tabId);
+        await chrome.sidePanel.open({ tabId });
+
+        // Send message to side panel after it opens
         setTimeout(() => {
+          console.log('[Background] Sending QUICK_ACTION to side panel');
           chrome.runtime.sendMessage({
             type: 'QUICK_ACTION',
             action: message.action,
             text: message.text
-          }).catch(() => { });
-        }, 500);
-      });
+          }).catch((err: any) => {
+            console.log('[Background] Side panel message error (expected):', err);
+          });
+        }, 800);
+      } catch (err) {
+        console.error('[Background] Error handling selection popup:', err);
+      }
     });
-    return false;
+    return true; // Keep channel open for async
   }
 
   // Forward messages from content script to side panel

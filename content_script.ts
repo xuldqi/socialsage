@@ -319,27 +319,46 @@ const createSelectionPopup = (): HTMLElement => {
   const popup = document.createElement('div');
   popup.className = 'socialsage-selection-popup';
   popup.innerHTML = `
-    <button data-action="explain" title="Explain">🔍</button>
-    <button data-action="translate" title="Translate">🌐</button>
-    <button data-action="summarize" title="Summarize">📝</button>
-    <button data-action="rewrite" title="Rewrite">✏️</button>
+    <button data-action="explain" title="解释">🔍</button>
+    <button data-action="translate" title="翻译">🌐</button>
+    <button data-action="summarize" title="总结">📝</button>
+    <button data-action="rewrite" title="改写">✏️</button>
   `;
 
-  // Handle button clicks
+  // Handle button clicks - use event delegation with closest
   popup.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const action = target.dataset.action;
-    if (action) {
-      const selectedText = window.getSelection()?.toString() || '';
-      if (selectedText) {
-        chrome.runtime.sendMessage({
-          type: 'SELECTION_POPUP_ACTION',
-          action: action,
-          text: selectedText
-        });
-      }
-      hideSelectionPopup();
+    e.preventDefault();
+    e.stopPropagation();
+
+    const button = (e.target as HTMLElement).closest('button');
+    if (!button) return;
+
+    const action = button.getAttribute('data-action');
+    if (!action) return;
+
+    const selectedText = window.getSelection()?.toString()?.trim() || '';
+    if (!selectedText) {
+      console.log('[SocialSage] No text selected');
+      return;
     }
+
+    console.log('[SocialSage] Sending action:', action, 'text:', selectedText.substring(0, 50));
+
+    try {
+      chrome.runtime.sendMessage({
+        type: 'SELECTION_POPUP_ACTION',
+        action: action,
+        text: selectedText
+      }, (response: any) => {
+        if (chrome.runtime.lastError) {
+          console.error('[SocialSage] Message error:', chrome.runtime.lastError);
+        }
+      });
+    } catch (err) {
+      console.error('[SocialSage] Send message failed:', err);
+    }
+
+    hideSelectionPopup();
   });
 
   return popup;

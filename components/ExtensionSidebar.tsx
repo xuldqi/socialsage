@@ -1126,7 +1126,6 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                 <div className="flex space-x-1 overflow-x-auto no-scrollbar pb-0">
                     <TabBtn id="context" icon={<ZapIcon />} label={t('nav_assist')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="chat" icon={<MessageSquareIcon />} label={t('nav_chat')} active={activeTab} onClick={setActiveTab} />
-                    <TabBtn id="queue" icon={<ClockIcon />} label={t('nav_queue')} active={activeTab} onClick={setActiveTab} badge={pendingReviewCount > 0 ? pendingReviewCount : undefined} />
                     <TabBtn id="drafts" icon={<FileTextIcon />} label={t('nav_drafts')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="rules" icon={<ListPlusIcon />} label={t('nav_rules')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="personas" icon={<UsersIcon />} label={t('nav_personas')} active={activeTab} onClick={setActiveTab} />
