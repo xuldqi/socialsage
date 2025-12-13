@@ -33,9 +33,44 @@ async function getSettings(): Promise<QuickAccessSettings> {
 }
 
 // ============================================
+// Context Menu Translations
+// ============================================
+const MENU_TRANSLATIONS: Record<string, Record<string, string>> = {
+  en: {
+    explain: '🔍 Explain Selection',
+    translate: '🌐 Translate Selection',
+    summarize: '📝 Summarize Selection',
+    rewrite: '✏️ Rewrite Selection'
+  },
+  zh: {
+    explain: '🔍 解释选中内容',
+    translate: '🌐 翻译选中内容',
+    summarize: '📝 总结选中内容',
+    rewrite: '✏️ 改写选中内容'
+  },
+  ja: {
+    explain: '🔍 選択を説明',
+    translate: '🌐 選択を翻訳',
+    summarize: '📝 選択を要約',
+    rewrite: '✏️ 選択を書き換え'
+  }
+};
+
+// ============================================
 // Context Menu
 // ============================================
-function createContextMenus() {
+async function createContextMenus() {
+  // Get user language setting
+  let lang = 'en';
+  try {
+    const result = await chrome.storage.local.get('socialsage_settings');
+    if (result.socialsage_settings?.language) {
+      lang = result.socialsage_settings.language;
+    }
+  } catch { }
+
+  const t = MENU_TRANSLATIONS[lang] || MENU_TRANSLATIONS.en;
+
   // Remove existing menus first
   chrome.contextMenus.removeAll(() => {
     // Parent menu
@@ -49,28 +84,28 @@ function createContextMenus() {
     chrome.contextMenus.create({
       id: 'socialsage-explain',
       parentId: 'socialsage-parent',
-      title: '🔍 Explain Selection',
+      title: t.explain,
       contexts: ['selection']
     });
 
     chrome.contextMenus.create({
       id: 'socialsage-translate',
       parentId: 'socialsage-parent',
-      title: '🌐 Translate Selection',
+      title: t.translate,
       contexts: ['selection']
     });
 
     chrome.contextMenus.create({
       id: 'socialsage-summarize',
       parentId: 'socialsage-parent',
-      title: '📝 Summarize Selection',
+      title: t.summarize,
       contexts: ['selection']
     });
 
     chrome.contextMenus.create({
       id: 'socialsage-rewrite',
       parentId: 'socialsage-parent',
-      title: '✏️ Rewrite Selection',
+      title: t.rewrite,
       contexts: ['selection']
     });
   });
