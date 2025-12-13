@@ -681,7 +681,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
         } catch (e: any) {
             if (e.name !== 'AbortError') {
                 console.error(e);
-                if (e.message && e.message.includes("Quota")) setDraft(e.message);
+                setDraft(e.message || "Error generating content. Please check your API usage or key.");
             }
         } finally {
             if (abortControllerRef.current === abortController) {
@@ -1619,6 +1619,9 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                                             {settings.language === 'zh' ? '选中的内容会显示在这里' :
                                                 settings.language === 'ja' ? '選択したコンテンツがここに表示されます' :
                                                     'Selected content will appear here'}
+                                        </p>
+                                        <p className="text-[10px] text-purple-400 mt-2 bg-purple-50 inline-block px-2 py-1 rounded">
+                                            💡 {settings.language === 'zh' ? '点击具体帖子可体验"克隆人设"功能' : 'Click a post to view "Clone Persona"'}
                                         </p>
                                     </div>
                                 )}

@@ -164,7 +164,7 @@ const PostGenerator: React.FC<PostGeneratorProps> = ({ personas, onUseDraft, api
                     return { id: personaId, text: "❌ 人设未找到" };
                 }
                 console.log('[PostGenerator] Generating for persona:', persona.name);
-                const text = await generateBlueprintContent(bp, persona, 'gemini-2.0-flash', effectiveConfig, language);
+                const text = await generateBlueprintContent(bp, persona, 'gemini-1.5-flash', effectiveConfig, language);
                 console.log('[PostGenerator] Generated text:', text?.substring(0, 100));
                 return { id: personaId, text };
             });
