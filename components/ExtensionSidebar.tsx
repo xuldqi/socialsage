@@ -1208,10 +1208,9 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                     <TabBtn id="context" icon={<ZapIcon />} label={t('nav_assist')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="chat" icon={<MessageSquareIcon />} label={t('nav_chat')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="drafts" icon={<FileTextIcon />} label={t('nav_drafts')} active={activeTab} onClick={setActiveTab} />
-                    <TabBtn id="rules" icon={<ListPlusIcon />} label={t('nav_rules')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="personas" icon={<UsersIcon />} label={t('nav_personas')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="memory" icon={<BrainIcon />} label={t('nav_memory')} active={activeTab} onClick={setActiveTab} />
-                    {/* Stats and Logs tabs hidden - moved to settings */}
+                    {/* Rules, Stats and Logs tabs hidden - accessible from settings */}
                 </div>
             </div>
 
@@ -1901,6 +1900,27 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Auto-Reply Rules Shortcut - Only on X */}
+                            {(context.pageData?.url?.includes('twitter.com') || context.pageData?.url?.includes('x.com')) && (
+                                <button
+                                    onClick={() => setActiveTab('rules')}
+                                    className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg hover:border-indigo-300 transition-colors"
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        <span className="text-lg">🤖</span>
+                                        <div className="text-left">
+                                            <div className="text-sm font-bold text-indigo-700">
+                                                {settings.language === 'zh' ? '自动回复规则' : settings.language === 'ja' ? '自動返信ルール' : 'Auto-Reply Rules'}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {settings.language === 'zh' ? '设置自动回复的触发条件' : 'Configure auto-reply triggers'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span className="text-slate-400">→</span>
+                                </button>
+                            )}
 
                             {/* Model Provider */}
                             <div>
