@@ -171,6 +171,22 @@ chrome.runtime.onStartup?.addListener(() => {
 });
 
 // ============================================
+// Keyboard Shortcut Command
+// ============================================
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'open-sidebar') {
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs[0]?.id) {
+        await chrome.sidePanel.open({ tabId: tabs[0].id });
+      }
+    } catch (err) {
+      console.error('[Background] Error opening sidebar via shortcut:', err);
+    }
+  }
+});
+
+// ============================================
 // Message Handling
 // ============================================
 chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
