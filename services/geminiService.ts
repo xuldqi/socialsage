@@ -13,15 +13,10 @@ import { Persona, SocialPost, AutoRule, AiModelId, ContentBlueprint, AgentRespon
  * 
  * ⚠️ NOTE: For production, remove hardcoded keys and require users to input their own.
  */
-const SYSTEM_API_KEYS: string[] = [
-  // 系统 API Key 已移除，用户必须在设置中输入自己的 API Key
-].filter(k => !!k && k !== 'PLACEHOLDER_API_KEY') as string[];
+// 默认后端代理 URL (如果用户没有 API Key)
+const QUOTA_API_URL = 'http://localhost:3000'; // 生产环境请替换为真实域名
 
-const DAILY_LIMIT = 10; // 每日限制 10 次
-const STORAGE_KEY = 'socialsage_daily_quota';
-
-// 服务端配额 API（暂时禁用，使用本地 localStorage 方案）
-const QUOTA_API_URL = '';
+const BACKEND_PROXY_URL = QUOTA_API_URL;
 
 // Localized Error Messages for Quota
 const QUOTA_MESSAGES: Record<string, string> = {
@@ -47,11 +42,8 @@ export interface AIConfig {
 
 // --- QUOTA MANAGEMENT ---
 
-/**
- * 服务端配额检查（优先使用）
- */
 const checkServerQuota = async (): Promise<{ allowed: boolean; remaining: number } | null> => {
-  if (!QUOTA_API_URL) return null; // 未配置服务端 API，使用本地方案
+  if (!QUOTA_API_URL) return null;
 
   try {
     const response = await fetch(`${QUOTA_API_URL}/check-quota`, {
@@ -61,144 +53,53 @@ const checkServerQuota = async (): Promise<{ allowed: boolean; remaining: number
     if (!response.ok) return null;
     return await response.json();
   } catch (error) {
-    console.warn('[Quota] Server check failed, falling back to local:', error);
+    console.warn('[Quota] Server check failed:', error);
     return null;
   }
 };
 
-/**
- * 服务端使用配额
- */
-const useServerQuota = async (): Promise<boolean> => {
-  if (!QUOTA_API_URL) return true; // 未配置服务端 API，使用本地方案
-
-  try {
-    const response = await fetch(`${QUOTA_API_URL}/use-quota`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!response.ok) {
-      const data = await response.json();
-      return data.success !== false;
-    }
-    return true;
-  } catch (error) {
-    console.warn('[Quota] Server use failed:', error);
-    return true; // 失败时允许使用，避免阻塞用户
-  }
-};
-
-const checkDailyQuota = async (): Promise<boolean> => {
-  // 尝试使用服务端检查
-  const serverResult = await checkServerQuota();
-  if (serverResult !== null) {
-    return serverResult.allowed;
-  }
-
-  // 回退到本地 localStorage 检查
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return true;
-
-    const { date, count } = JSON.parse(data);
-    const today = new Date().toDateString();
-
-    if (date !== today) {
-      // Reset for new day
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, count: 0 }));
-      return true;
-    }
-
-    return count < DAILY_LIMIT;
-  } catch (e) {
-    return true; // Fallback to allow if error
-  }
-};
-
-const incrementDailyQuota = async () => {
-  // 尝试使用服务端
-  await useServerQuota();
-
-  // 同时更新本地存储
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    const today = new Date().toDateString();
-    let count = 0;
-
-    if (data) {
-      const parsed = JSON.parse(data);
-      if (parsed.date === today) {
-        count = parsed.count;
-      }
-    }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, count: count + 1 }));
-  } catch (e) {
-    console.error("Failed to update quota", e);
-  }
-};
-
 export const getRemainingQuota = async (): Promise<number> => {
-  // 尝试使用服务端
+  // 仅检查服务端，因为所有默认请求都走服务端代理
   const serverResult = await checkServerQuota();
   if (serverResult !== null) {
     return serverResult.remaining;
   }
-
-  // 回退到本地
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return DAILY_LIMIT;
-    const { date, count } = JSON.parse(data);
-    if (date !== new Date().toDateString()) return DAILY_LIMIT;
-    return Math.max(0, DAILY_LIMIT - count);
-  } catch (e) {
-    return DAILY_LIMIT;
-  }
+  return DAILY_LIMIT; // 如果检查失败，默认显示还有额度（让后端去拦截）
 };
 
-// --- CLIENT FACTORY ---
-
-/**
- * Gets a System Key using simple rotation/random selection to distribute load.
- */
-const getSystemKey = (): string | null => {
-  if (SYSTEM_API_KEYS.length === 0) {
-    return null; // 没有系统 key，需要用户提供
-  }
-  // Simple random selection for load balancing
-  const randomIndex = Math.floor(Math.random() * SYSTEM_API_KEYS.length);
-  return SYSTEM_API_KEYS[randomIndex];
-};
 
 const getAiClient = (config?: AIConfig) => {
-  // Priority: 1. User Custom Key -> 2. System Key Pool
+  // Priority: 1. User Custom Key -> 2. Backend Proxy (System Key)
   let apiKey = config?.apiKey;
+  let baseUrl = config?.baseUrl;
 
-  // If no user key, try to use System Key
+  // If no user key, use Backend Proxy
   if (!apiKey) {
-    const systemKey = getSystemKey();
-    if (systemKey) {
-      if (!checkDailyQuota()) {
-        throw new Error("QUOTA_EXCEEDED");
-      }
-      apiKey = systemKey;
+    if (BACKEND_PROXY_URL) {
+      // Use Backend Proxy
+      // We set a dummy key because SDK requires one, but the backend will ignore/replace it
+      apiKey = 'dummy_proxy_key';
+      baseUrl = BACKEND_PROXY_URL;
     }
   }
 
   if (!apiKey) {
-    // 没有 API Key，抛出清晰的错误
+    // 没有 API Key 且没有 Backend Proxy，抛出清晰的错误
     const lang = config?.outputLanguage || 'en';
     throw new Error(NO_API_KEY_MESSAGES[lang] || NO_API_KEY_MESSAGES.en);
   }
-  return new GoogleGenAI({ apiKey });
+
+  return new GoogleGenAI({
+    apiKey,
+    baseUrl // Support baseUrl override for Proxy
+  }, {
+    baseUrl // Some versions might expect it in RequestOptions
+  });
 };
 
 const trackUsageIfDefault = (config?: AIConfig) => {
-  // If no custom key is provided, we assume default key is used, so we increment quota
-  if (!config?.apiKey) {
-    incrementDailyQuota();
-  }
+  // If no custom key is provided, we assume default key (backend) is used.
+  // The counting happens on the backend now.
 };
 
 const getLanguageInstruction = (config?: AIConfig): string => {
@@ -446,8 +347,8 @@ export const generateBlueprintContent = async (
       ? `Rewrite this source material based on the persona:\n"${blueprint.sourceMaterial}"`
       : `Create original content for the topic: ${blueprint.name}`;
 
-    if (modelId === 'custom' || modelId.startsWith('deepseek')) {
-      return await callOpenAICompatible(systemInstruction, prompt, config);
+    if (modelId === 'custom' || modelId.startsWith('deepseek') || config?.baseUrl) {
+      return await callOpenAICompatible(systemInstruction, prompt, { ...config, customModel: config?.customModel || modelId });
     }
 
     const ai = getAiClient(config);

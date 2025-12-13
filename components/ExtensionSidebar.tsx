@@ -635,7 +635,8 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
 
         // For Gemini models - 使用 customApiKey，这是用户在设置中输入的 API Key
         return {
-            apiKey: settings.customApiKey,  // 修复：之前错误地使用了 settings.apiKey
+            apiKey: settings.customApiKey,
+            baseUrl: settings.customBaseUrl,
             signal,
             outputLanguage: lang
         };

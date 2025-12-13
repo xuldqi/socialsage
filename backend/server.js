@@ -195,11 +195,104 @@ app.post('/use-quota', (req, res) => {
 /**
  * 404 处理
  */
-app.use((req, res) => {
+app.use((req, res, next) => {
+    if (req.path.startsWith('/v1beta/')) {
+        return next(); // Pass to proxy handler
+    }
     res.status(404).json({
         error: 'Not Found',
-        endpoints: ['/check-quota', '/use-quota', '/health']
+        endpoints: ['/check-quota', '/use-quota', '/health', '/v1beta/*']
     });
+});
+
+/**
+ * Gemini API Proxy
+ * Forwards requests to Google, injecting the System API Key
+ */
+app.all('/v1beta/*', async (req, res) => {
+    const ip = getClientIP(req);
+    const today = getTodayKey();
+    const key = getStorageKey(ip, today);
+
+    // 1. Check Quota
+    try {
+        let data = loadQuotaData();
+        data = cleanupOldData(data);
+        const currentCount = data[key] || 0;
+
+        if (currentCount >= DAILY_LIMIT) {
+            return res.status(429).json({
+                error: {
+                    code: 429,
+                    message: 'QUOTA_EXCEEDED: Daily limit reached for this IP.',
+                    status: 'RESOURCE_EXHAUSTED'
+                }
+            });
+        }
+
+        // Increment Quota (optimistic)
+        data[key] = currentCount + 1;
+        saveQuotaData(data);
+
+    } catch (error) {
+        console.error('Quota check failed:', error);
+        // Continue despite error to prevent blocking service
+    }
+
+    // 2. Prepare Proxy Request
+    const SYSTEM_API_KEY = process.env.SYSTEM_API_KEY;
+    if (!SYSTEM_API_KEY) {
+        return res.status(500).json({ error: { message: 'NO_SYSTEM_KEYS_CONFIGURED: Backend missing API Key.' } });
+    }
+
+    const targetUrl = `https://generativelanguage.googleapis.com${req.originalUrl}${req.originalUrl.includes('?') ? '&' : '?'}key=${SYSTEM_API_KEY}`;
+
+    try {
+        // Requires Node 18+ specific simple fetch, or standard https request
+        // Using dynamic import for node-fetch if needed, or native fetch if available
+        const fetch = global.fetch || require('node-fetch');
+
+        // Remove host header to avoid confusion
+        const headers = { ...req.headers };
+        delete headers['host'];
+        delete headers['content-length'];
+
+        const proxyRes = await fetch(targetUrl, {
+            method: req.method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body)
+        });
+
+        // Handle Stream
+        if (proxyRes.headers.get('content-type')?.includes('text/event-stream')) {
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            if (proxyRes.body && proxyRes.body.pipe) {
+                proxyRes.body.pipe(res);
+            } else {
+                // Node 18 fetch returns a stream
+                const reader = proxyRes.body.getReader();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    res.write(value);
+                }
+                res.end();
+            }
+            return;
+        }
+
+        const data = await proxyRes.text();
+        res.status(proxyRes.status);
+        res.set('Content-Type', proxyRes.headers.get('content-type'));
+        res.send(data);
+
+    } catch (proxyError) {
+        console.error('Proxy Error:', proxyError);
+        res.status(500).json({ error: { message: `Proxy Error: ${proxyError.message}` } });
+    }
 });
 
 // 启动服务器 - 绑定到 0.0.0.0 以接受外部连接
