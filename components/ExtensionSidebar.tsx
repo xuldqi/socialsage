@@ -1551,23 +1551,11 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                         {/* Step 1: Selection / Reply Target */}
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                             <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-100">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <span className="text-lg">💬</span>
-                                        <span className="text-sm font-bold text-slate-700">
-                                            {settings.language === 'zh' ? '回复目标' : settings.language === 'ja' ? '返信対象' : 'Reply Target'}
-                                        </span>
-                                    </div>
-                                    {(context.selection || context.postData?.content) && (
-                                        <button
-                                            onClick={() => {
-                                                setContext(prev => ({ ...prev, selection: undefined, postData: undefined }));
-                                            }}
-                                            className="text-xs text-slate-400 hover:text-red-500 transition-colors"
-                                        >
-                                            ✕ 清除
-                                        </button>
-                                    )}
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-lg">💬</span>
+                                    <span className="text-sm font-bold text-slate-700">
+                                        {settings.language === 'zh' ? '回复目标' : settings.language === 'ja' ? '返信対象' : 'Reply Target'}
+                                    </span>
                                 </div>
                             </div>
                             <div className="p-3">
@@ -1678,14 +1666,12 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                         {/* Step 2: AI Draft (Only show when there's content) */}
 
                         {/* Draft Input Area */}
-                        <div className="relative group">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 transition-opacity group-focus-within:opacity-100"></div>
-
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                             {/* Draft Header */}
-                            <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/30 border-b border-indigo-100/50">
+                            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-100">
                                 <div className="flex items-center space-x-2">
                                     <SparklesIcon className="w-3 h-3 text-indigo-500" />
-                                    <span className="text-xs font-bold text-indigo-900">{t('card_ai_draft')}</span>
+                                    <span className="text-sm font-bold text-slate-700">{t('card_ai_draft')}</span>
                                     {usedMemoryForDraft && (
                                         <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full flex items-center" title={usedMemoryForDraft.content}>
                                             <BrainIcon className="w-2 h-2 mr-1" /> Context
