@@ -14,7 +14,7 @@ import { Persona, SocialPost, AutoRule, AiModelId, ContentBlueprint, AgentRespon
  * ⚠️ NOTE: For production, remove hardcoded keys and require users to input their own.
  */
 // 默认后端代理 URL (如果用户没有 API Key)
-const QUOTA_API_URL = 'http://localhost:3000'; // 生产环境请替换为真实域名
+const QUOTA_API_URL = 'https://ssageai.dropshare.tech'; // 生产环境后端地址
 
 const BACKEND_PROXY_URL = QUOTA_API_URL;
 

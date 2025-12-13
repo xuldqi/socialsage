@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9876;
 const DAILY_LIMIT = parseInt(process.env.DAILY_LIMIT || '10', 10);
 
 // 数据存储路径
