@@ -1207,9 +1207,8 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                     <TabBtn id="drafts" icon={<FileTextIcon />} label={t('nav_drafts')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="rules" icon={<ListPlusIcon />} label={t('nav_rules')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="personas" icon={<UsersIcon />} label={t('nav_personas')} active={activeTab} onClick={setActiveTab} />
-                    <TabBtn id="stats" icon={<BarChartIcon />} label={t('nav_stats')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="memory" icon={<BrainIcon />} label={t('nav_memory')} active={activeTab} onClick={setActiveTab} />
-                    <TabBtn id="logs" icon={<TerminalIcon />} label={t('nav_logs')} active={activeTab} onClick={setActiveTab} />
+                    {/* Stats and Logs tabs hidden - moved to settings */}
                 </div>
             </div>
 
@@ -1628,6 +1627,50 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                                 )}
                             </div>
                         </div>
+
+                        {/* Pending Review List */}
+                        {posts.filter(p => p.reviewStatus === 'pending').length > 0 && (
+                            <div className="bg-white rounded-xl border border-orange-200 shadow-sm overflow-hidden">
+                                <div className="p-3 bg-orange-50 border-b border-orange-100 flex justify-between items-center">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-lg">📋</span>
+                                        <span className="text-sm font-bold text-orange-700">
+                                            {settings.language === 'zh' ? '待审核' : settings.language === 'ja' ? 'レビュー待ち' : 'Pending Review'}
+                                        </span>
+                                        <span className="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                                            {posts.filter(p => p.reviewStatus === 'pending').length}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="max-h-48 overflow-y-auto divide-y divide-orange-100">
+                                    {posts.filter(p => p.reviewStatus === 'pending').slice(0, 5).map(post => (
+                                        <div key={post.id} className="p-3 hover:bg-orange-50/50 transition-colors">
+                                            <p className="text-xs text-slate-500 truncate mb-1">@{post.author}</p>
+                                            <p className="text-sm text-slate-700 line-clamp-2 mb-2">"{post.content}"</p>
+                                            {post.replyDraft && (
+                                                <div className="bg-indigo-50 rounded p-2 text-xs text-indigo-700 mb-2 line-clamp-2">
+                                                    💬 {post.replyDraft}
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => onUpdatePost && onUpdatePost({ ...post, isAutoReplied: true, reviewStatus: 'approved' })}
+                                                    className="flex-1 py-1 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700"
+                                                >
+                                                    ✓ 批准
+                                                </button>
+                                                <button
+                                                    onClick={() => onUpdatePost && onUpdatePost({ ...post, reviewStatus: 'rejected', replyDraft: undefined })}
+                                                    className="flex-1 py-1 bg-red-100 text-red-600 text-xs font-bold rounded hover:bg-red-200"
+                                                >
+                                                    ✕ 拒绝
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Step 2: AI Draft (Only show when there's content) */}
 
