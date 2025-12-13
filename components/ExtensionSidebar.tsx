@@ -1621,6 +1621,87 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                             </div>
                         </div>
 
+                        {/* Clone Persona Section - Show when postData has author */}
+                        {context.postData?.author && (
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-slate-100">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-lg">🧬</span>
+                                            <span className="text-sm font-bold text-slate-700">
+                                                {settings.language === 'zh' ? '克隆人设' : 'Clone Persona'}
+                                            </span>
+                                        </div>
+                                        {!analyzedPersona && (
+                                            <button
+                                                onClick={handleAnalyzeStyle}
+                                                disabled={isGenerating}
+                                                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                            >
+                                                {isGenerating ? (
+                                                    <><SparklesIcon className="w-3 h-3 animate-spin" /> 分析中...</>
+                                                ) : (
+                                                    <><UserPlusIcon className="w-3 h-3" /> {settings.language === 'zh' ? '分析风格' : 'Analyze Style'}</>
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Analysis Result */}
+                                {analyzedPersona ? (
+                                    <div className="p-3 space-y-3">
+                                        <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                                            <div className="flex items-center space-x-2 mb-2">
+                                                <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                                                    {analyzedPersona.name?.[0] || '?'}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-sm text-purple-900">{analyzedPersona.name || 'Unknown'}</div>
+                                                    <div className="text-xs text-purple-600">{analyzedPersona.tone || ''}</div>
+                                                </div>
+                                            </div>
+                                            {analyzedPersona.exampleText && (
+                                                <p className="text-xs text-slate-600 italic bg-white p-2 rounded border border-purple-100">
+                                                    "{analyzedPersona.exampleText.substring(0, 150)}{analyzedPersona.exampleText.length > 150 ? '...' : ''}"
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => {
+                                                    if (analyzedPersona.name && analyzedPersona.tone) {
+                                                        onAddPersona({
+                                                            id: Date.now().toString(),
+                                                            name: analyzedPersona.name,
+                                                            tone: analyzedPersona.tone,
+                                                            exampleText: analyzedPersona.exampleText || '',
+                                                            sourceUrl: context.pageData?.url || ''
+                                                        });
+                                                        setAnalyzedPersona(null);
+                                                    }
+                                                }}
+                                                className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-1"
+                                            >
+                                                <CheckIcon className="w-3 h-3" />
+                                                <span>{settings.language === 'zh' ? '保存到人设' : 'Save Persona'}</span>
+                                            </button>
+                                            <button
+                                                onClick={() => setAnalyzedPersona(null)}
+                                                className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
+                                            >
+                                                {settings.language === 'zh' ? '取消' : 'Cancel'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-3 text-center text-xs text-slate-400">
+                                        {settings.language === 'zh' ? `分析 @${context.postData.author} 的写作风格，创建可复用的人设` : `Analyze @${context.postData.author}'s writing style`}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Pending Review List */}
                         {posts.filter(p => p.reviewStatus === 'pending').length > 0 && (
                             <div className="bg-white rounded-xl border border-orange-200 shadow-sm overflow-hidden">
