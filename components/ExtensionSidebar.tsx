@@ -14,6 +14,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
         nav_chat: "Chat",
         nav_assist: "Assist",
         nav_drafts: "Drafts",
+        nav_content: "Content",
         nav_rules: "Rules",
         nav_personas: "Personas",
         nav_stats: "Stats",
@@ -112,6 +113,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
         nav_chat: "聊天",
         nav_assist: "助手",
         nav_drafts: "草稿",
+        nav_content: "内容",
         nav_rules: "规则",
         nav_personas: "人设",
         nav_stats: "统计",
@@ -210,6 +212,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
         nav_chat: "チャット",
         nav_assist: "アシスト",
         nav_drafts: "下書き",
+        nav_content: "コンテンツ",
         nav_rules: "ルール",
         nav_personas: "ペルソナ",
         nav_stats: "統計",
@@ -372,6 +375,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
     onAddSystemLog, onUpdatePost, replyHistory = [], onDeleteReply, onRecordReply
 }) => {
     const [activeTab, setActiveTab] = useState<ExtensionTab>('context'); // Default Context First
+    const [contentSubTab, setContentSubTab] = useState<'rewrite' | 'knowledge'>('rewrite');
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     // Draft State
@@ -1207,10 +1211,9 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                 <div className="flex space-x-1 overflow-x-auto no-scrollbar pb-0">
                     <TabBtn id="context" icon={<ZapIcon />} label={t('nav_assist')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="chat" icon={<MessageSquareIcon />} label={t('nav_chat')} active={activeTab} onClick={setActiveTab} />
-                    <TabBtn id="drafts" icon={<FileTextIcon />} label={t('nav_drafts')} active={activeTab} onClick={setActiveTab} />
+                    <TabBtn id="content" icon={<FileTextIcon />} label={t('nav_content')} active={activeTab} onClick={setActiveTab} />
                     <TabBtn id="personas" icon={<UsersIcon />} label={t('nav_personas')} active={activeTab} onClick={setActiveTab} />
-                    <TabBtn id="memory" icon={<BrainIcon />} label={t('nav_memory')} active={activeTab} onClick={setActiveTab} />
-                    {/* Rules, Stats and Logs tabs hidden - accessible from settings */}
+                    {/* Rules, Stats, Logs, Drafts, Memory hidden or merged */}
                 </div>
             </div>
 
@@ -1746,16 +1749,71 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                     </div>
                 )}
 
-                {/* TAB: DRAFTS (Content Generator) */}
-                {activeTab === 'drafts' && (
-                    <div className="h-full p-4 overflow-hidden">
-                        <PostGenerator
-                            personas={personas}
-                            onUseDraft={(content) => { setDraft(content); setActiveTab('context'); }}
-                            apiKey={settings.apiKey}
-                            aiConfig={getAiConfig()}
-                            language={settings.language}
-                        />
+                {/* TAB: CONTENT (Merged Drafts + Memory) */}
+                {activeTab === 'content' && (
+                    <div className="h-full flex flex-col overflow-hidden">
+                        {/* Sub-tabs */}
+                        <div className="flex border-b border-slate-200 bg-white px-4 pt-3 shrink-0">
+                            <button
+                                onClick={() => setContentSubTab('rewrite')}
+                                className={`px-4 py-2 text-xs font-bold border-b-2 transition-colors ${contentSubTab === 'rewrite' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                            >
+                                📝 {settings.language === 'zh' ? '内容改写' : settings.language === 'ja' ? 'リライト' : 'Rewrite'}
+                            </button>
+                            <button
+                                onClick={() => setContentSubTab('knowledge')}
+                                className={`px-4 py-2 text-xs font-bold border-b-2 transition-colors ${contentSubTab === 'knowledge' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                            >
+                                📚 {settings.language === 'zh' ? '知识库' : settings.language === 'ja' ? '知識' : 'Knowledge'}
+                            </button>
+                        </div>
+
+                        {/* Sub-tab Content: Rewrite (PostGenerator) */}
+                        {contentSubTab === 'rewrite' && (
+                            <div className="flex-1 p-4 overflow-hidden">
+                                <PostGenerator
+                                    personas={personas}
+                                    onUseDraft={(content) => { setDraft(content); setActiveTab('context'); }}
+                                    apiKey={settings.apiKey}
+                                    aiConfig={getAiConfig()}
+                                    language={settings.language}
+                                />
+                            </div>
+                        )}
+
+                        {/* Sub-tab Content: Knowledge Base */}
+                        {contentSubTab === 'knowledge' && (
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                    <h2 className="font-bold text-slate-800 mb-2">{t('mem_kb')}</h2>
+                                    <p className="text-xs text-slate-500 mb-3">
+                                        {settings.language === 'zh' ? '添加素材，AI 生成内容时会参考这些知识' : 'Add materials for AI to reference when generating content'}
+                                    </p>
+                                    <div className="flex space-x-2 mb-4">
+                                        <input
+                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-500"
+                                            placeholder={t('mem_placeholder')}
+                                            value={memoryInput}
+                                            onChange={e => setMemoryInput(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Enter' && memoryInput) { onAddMemory(memoryInput); setMemoryInput(''); } }}
+                                        />
+                                        <button onClick={() => { if (memoryInput) { onAddMemory(memoryInput); setMemoryInput(''); } }} className="bg-slate-900 text-white px-3 rounded-lg font-bold text-xs">{t('mem_add')}</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {memories.map(m => (
+                                            <div key={m.id} className="group bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs relative hover:border-indigo-200 transition-colors">
+                                                <p className="text-slate-700 pr-6 leading-relaxed">{m.content}</p>
+                                                <span className="text-[10px] text-slate-400 mt-1 block">{new Date(m.timestamp).toLocaleDateString()} • {m.source}</span>
+                                                <button onClick={() => onDeleteMemory(m.id)} className="absolute top-2 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <TrashIcon className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {memories.length === 0 && <p className="text-center text-slate-400 text-xs py-4">{t('mem_empty')}</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
