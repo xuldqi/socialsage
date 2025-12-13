@@ -1,0 +1,78 @@
+/* SocialSage AI - Content Script Styles */
+
+/* Selection Popup */
+.socialsage-selection-popup {
+  position: fixed;
+  z-index: 2147483647;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  animation: socialsage-popup-appear 0.2s ease-out;
+  pointer-events: auto;
+}
+
+.socialsage-selection-popup button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.socialsage-selection-popup button:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.socialsage-selection-popup button:active {
+  transform: scale(0.95);
+}
+
+.socialsage-selection-popup button[title]::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #1a1a2e;
+  color: white;
+  font-size: 11px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.socialsage-selection-popup button:hover[title]::after {
+  opacity: 1;
+}
+
+@keyframes socialsage-popup-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .socialsage-selection-popup {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  }
+}

@@ -8,7 +8,7 @@ import { build } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Plugin to copy manifest.json and icons to dist
+// Plugin to copy manifest.json, icons, and CSS to dist
 const copyManifestPlugin = () => ({
   name: 'copy-manifest',
   closeBundle() {
@@ -25,6 +25,10 @@ const copyManifestPlugin = () => ({
         copyFileSync(iconPath, `dist/icon${size}.png`);
       }
     });
+    // Copy content script CSS
+    if (existsSync('content_style.css')) {
+      copyFileSync('content_style.css', 'dist/content_style.css');
+    }
   }
 });
 

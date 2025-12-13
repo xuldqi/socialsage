@@ -12,17 +12,11 @@
     "sidePanel",
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "contextMenus"
   ],
   "host_permissions": [
-    "*://twitter.com/*",
-    "*://x.com/*",
-    "*://www.linkedin.com/*",
-    "*://www.reddit.com/*",
-    "*://weibo.com/*",
-    "*://www.xiaohongshu.com/*",
-    "*://www.facebook.com/*",
-    "*://mail.google.com/*"
+    "<all_urls>"
   ],
   "side_panel": {
     "default_path": "index.html"
@@ -30,23 +24,30 @@
   "background": {
     "service_worker": "background.js"
   },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Open SocialSage AI sidebar"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
-        "*://twitter.com/*",
-        "*://x.com/*",
-        "*://www.linkedin.com/*",
-        "*://www.reddit.com/*",
-        "*://weibo.com/*",
-        "*://www.xiaohongshu.com/*",
-        "*://www.facebook.com/*",
-        "*://mail.google.com/*"
+        "<all_urls>"
       ],
-      "js": ["content_script.js"],
+      "js": [
+        "content_script.js"
+      ],
+      "css": [
+        "content_style.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.deepseek.com https://api.moonshot.cn https://dashscope.aliyuncs.com https://api.lingyiwanwu.com https://www.packyapi.com;"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.deepseek.com https://api.moonshot.cn https://dashscope.aliyuncs.com https://api.lingyiwanwu.com https://www.packyapi.com https://ssageai.dropshare.tech;"
   }
 }

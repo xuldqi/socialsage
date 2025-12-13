@@ -30,6 +30,29 @@ let debounceTimer: ReturnType<typeof setTimeout>;
 let lastCapturedContext: CapturedContext | null = null;
 let isInitialized = false;
 
+// Selection Popup State
+let selectionPopup: HTMLElement | null = null;
+let selectionPopupEnabled = true;
+
+// Load settings
+const loadSettings = async () => {
+  try {
+    const result = await chrome.storage.local.get('socialsage_quick_access_settings');
+    const settings = result.socialsage_quick_access_settings || {};
+    selectionPopupEnabled = settings.enableSelectionPopup !== false;
+  } catch {
+    selectionPopupEnabled = true;
+  }
+};
+
+// Listen for settings changes
+chrome.storage.onChanged.addListener((changes: any) => {
+  if (changes.socialsage_quick_access_settings) {
+    const settings = changes.socialsage_quick_access_settings.newValue || {};
+    selectionPopupEnabled = settings.enableSelectionPopup !== false;
+  }
+});
+
 // ============================================
 // DOM Extraction
 // ============================================
@@ -40,11 +63,11 @@ let isInitialized = false;
 const captureAndSend = () => {
   try {
     const context = scanPage(document.body);
-    
+
     // 添加真实 URL/Title
     context.metadata.url = window.location.href;
     context.metadata.title = document.title;
-    
+
     // 添加选中文本
     const selection = window.getSelection()?.toString();
     if (selection) {
@@ -53,7 +76,7 @@ const captureAndSend = () => {
         selectionText: selection
       };
     }
-    
+
     lastCapturedContext = context;
 
     chrome.runtime.sendMessage({
@@ -74,12 +97,12 @@ const captureAndSend = () => {
 const isSignificantMutation = (mutations: MutationRecord[]): boolean => {
   let addedNodes = 0;
   let removedNodes = 0;
-  
+
   for (const mutation of mutations) {
     addedNodes += mutation.addedNodes.length;
     removedNodes += mutation.removedNodes.length;
   }
-  
+
   // 超过 5 个节点变化视为显著
   return addedNodes + removedNodes > 5;
 };
@@ -109,38 +132,38 @@ const simulateHumanTyping = async (element: HTMLElement, text: string): Promise<
   const isTextarea = element.tagName === 'TEXTAREA';
   const isInput = element.tagName === 'INPUT';
   const isContentEditable = element.getAttribute('contenteditable') === 'true';
-  
+
   // 聚焦元素
   element.focus();
-  
+
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    
+
     // 触发 keydown 事件
     element.dispatchEvent(new KeyboardEvent('keydown', {
       key: char,
       bubbles: true
     }));
-    
+
     // 更新值
     if (isTextarea || isInput) {
       (element as HTMLInputElement | HTMLTextAreaElement).value += char;
     } else if (isContentEditable) {
       element.innerText += char;
     }
-    
+
     // 触发 input 事件
     element.dispatchEvent(new InputEvent('input', {
       data: char,
       bubbles: true
     }));
-    
+
     // 触发 keyup 事件
     element.dispatchEvent(new KeyboardEvent('keyup', {
       key: char,
       bubbles: true
     }));
-    
+
     // 延迟
     await new Promise(resolve => setTimeout(resolve, getTypingDelay()));
   }
@@ -151,18 +174,18 @@ const simulateHumanTyping = async (element: HTMLElement, text: string): Promise<
  */
 const executePageAction = async (action: PageAction): Promise<ActionResult> => {
   const startTime = Date.now();
-  
+
   try {
     let element: HTMLElement | null = null;
-    
+
     // 查找目标元素
     if (action.selector) {
       element = document.querySelector(action.selector) as HTMLElement;
     } else if (action.nodeId) {
-      element = document.getElementById(action.nodeId) || 
-                document.querySelector(`[data-node-id="${action.nodeId}"]`) as HTMLElement;
+      element = document.getElementById(action.nodeId) ||
+        document.querySelector(`[data-node-id="${action.nodeId}"]`) as HTMLElement;
     }
-    
+
     // 滚动操作不需要元素
     if (action.type !== 'scroll' && !element) {
       return {
@@ -172,7 +195,7 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
         duration: Date.now() - startTime
       };
     }
-    
+
     // 等待元素可见
     if (action.options?.waitForVisible && element) {
       const rect = element.getBoundingClientRect();
@@ -185,18 +208,18 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
         };
       }
     }
-    
+
     // 滚动到元素
     if (action.options?.scrollIntoView && element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       await new Promise(resolve => setTimeout(resolve, 300));
     }
-    
+
     // 操作前延迟
     if (action.options?.delay) {
       await new Promise(resolve => setTimeout(resolve, action.options!.delay));
     }
-    
+
     // 执行操作
     switch (action.type) {
       case 'click':
@@ -209,7 +232,7 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
           element.click();
         }
         break;
-        
+
       case 'fill':
         if (element && action.value !== undefined) {
           if (action.options?.humanLike) {
@@ -232,7 +255,7 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
           }
         }
         break;
-        
+
       case 'scroll':
         if (action.selector === 'top') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -245,20 +268,20 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
           window.scrollBy({ top: 500, behavior: 'smooth' });
         }
         break;
-        
+
       case 'hover':
         if (element) {
           element.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
           element.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
         }
         break;
-        
+
       case 'focus':
         if (element) {
           element.focus();
         }
         break;
-        
+
       case 'select':
         if (element) {
           if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
@@ -267,14 +290,14 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
         }
         break;
     }
-    
+
     return {
       success: true,
       actionType: action.type,
       duration: Date.now() - startTime,
       data: action.type === 'fill' ? { filledValue: action.value } : undefined
     };
-    
+
   } catch (error) {
     return {
       success: false,
@@ -286,8 +309,105 @@ const executePageAction = async (action: PageAction): Promise<ActionResult> => {
 };
 
 // ============================================
+// Selection Popup
+// ============================================
+
+/**
+ * 创建划词弹窗
+ */
+const createSelectionPopup = (): HTMLElement => {
+  const popup = document.createElement('div');
+  popup.className = 'socialsage-selection-popup';
+  popup.innerHTML = `
+    <button data-action="explain" title="Explain">🔍</button>
+    <button data-action="translate" title="Translate">🌐</button>
+    <button data-action="summarize" title="Summarize">📝</button>
+    <button data-action="rewrite" title="Rewrite">✏️</button>
+  `;
+
+  // Handle button clicks
+  popup.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const action = target.dataset.action;
+    if (action) {
+      const selectedText = window.getSelection()?.toString() || '';
+      if (selectedText) {
+        chrome.runtime.sendMessage({
+          type: 'SELECTION_POPUP_ACTION',
+          action: action,
+          text: selectedText
+        });
+      }
+      hideSelectionPopup();
+    }
+  });
+
+  return popup;
+};
+
+/**
+ * 显示划词弹窗
+ */
+const showSelectionPopup = (x: number, y: number) => {
+  if (!selectionPopupEnabled) return;
+
+  hideSelectionPopup();
+
+  selectionPopup = createSelectionPopup();
+  selectionPopup.style.left = `${x}px`;
+  selectionPopup.style.top = `${y}px`;
+  document.body.appendChild(selectionPopup);
+};
+
+/**
+ * 隐藏划词弹窗
+ */
+const hideSelectionPopup = () => {
+  if (selectionPopup && selectionPopup.parentNode) {
+    selectionPopup.parentNode.removeChild(selectionPopup);
+    selectionPopup = null;
+  }
+};
+
+// ============================================
 // Event Listeners
 // ============================================
+
+/**
+ * 监听鼠标抬起，显示划词弹窗
+ */
+document.addEventListener('mouseup', (e) => {
+  // 延迟检查选中文本，让选择完成
+  setTimeout(() => {
+    const selection = window.getSelection();
+    const selectedText = selection?.toString().trim();
+
+    if (selectedText && selectedText.length > 0 && selectionPopupEnabled) {
+      // 获取选区位置
+      const range = selection?.getRangeAt(0);
+      const rect = range?.getBoundingClientRect();
+
+      if (rect) {
+        // 在选区上方居中显示
+        const popupX = rect.left + rect.width / 2 - 80;
+        const popupY = rect.top + window.scrollY - 50;
+        showSelectionPopup(
+          Math.max(10, popupX),
+          Math.max(10, popupY)
+        );
+      }
+    }
+  }, 10);
+});
+
+/**
+ * 点击其他地方隐藏弹窗
+ */
+document.addEventListener('mousedown', (e) => {
+  if (selectionPopup && !selectionPopup.contains(e.target as Node)) {
+    hideSelectionPopup();
+  }
+});
 
 /**
  * 监听选中文本变化
@@ -297,7 +417,7 @@ document.addEventListener('selectionchange', () => {
   if (selection && selection.length > 0) {
     const range = window.getSelection()?.getRangeAt(0);
     const rect = range?.getBoundingClientRect();
-    
+
     chrome.runtime.sendMessage({
       type: 'SELECTION_CHANGE',
       payload: {
@@ -311,6 +431,9 @@ document.addEventListener('selectionchange', () => {
       },
       timestamp: Date.now()
     });
+  } else {
+    // 选择被清除时隐藏弹窗
+    hideSelectionPopup();
   }
 });
 
@@ -320,11 +443,11 @@ document.addEventListener('selectionchange', () => {
 document.addEventListener('focusin', (e) => {
   const target = e.target as HTMLElement;
   if (target) {
-    const isEditable = 
+    const isEditable =
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
       target.getAttribute('contenteditable') === 'true';
-    
+
     chrome.runtime.sendMessage({
       type: 'FOCUS_CHANGE',
       payload: {
@@ -346,10 +469,10 @@ document.addEventListener('focusin', (e) => {
 
 const observer = new MutationObserver((mutations) => {
   clearTimeout(debounceTimer);
-  
+
   // 检查是否是显著变化
   const significant = isSignificantMutation(mutations);
-  
+
   if (significant) {
     // 通知 Sidebar 有显著 DOM 变化
     chrome.runtime.sendMessage({
@@ -362,7 +485,7 @@ const observer = new MutationObserver((mutations) => {
       timestamp: Date.now()
     });
   }
-  
+
   debounceTimer = setTimeout(() => {
     captureAndSend();
   }, DEBOUNCE_DELAY);
@@ -384,7 +507,7 @@ const checkNavigation = () => {
   if (window.location.href !== lastUrl) {
     const oldUrl = lastUrl;
     lastUrl = window.location.href;
-    
+
     chrome.runtime.sendMessage({
       type: 'NAVIGATION',
       payload: {
@@ -394,7 +517,7 @@ const checkNavigation = () => {
       },
       timestamp: Date.now()
     });
-    
+
     // 导航后重新扫描
     setTimeout(captureAndSend, 500);
   }
@@ -407,12 +530,12 @@ window.addEventListener('popstate', checkNavigation);
 const originalPushState = history.pushState;
 const originalReplaceState = history.replaceState;
 
-history.pushState = function(...args) {
+history.pushState = function (...args) {
   originalPushState.apply(this, args);
   checkNavigation();
 };
 
-history.replaceState = function(...args) {
+history.replaceState = function (...args) {
   originalReplaceState.apply(this, args);
   checkNavigation();
 };
@@ -434,7 +557,7 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
     });
     return false;
   }
-  
+
   // REQUEST_PAGE_CONTEXT - 请求页面上下文
   if (message.type === 'REQUEST_PAGE_CONTEXT') {
     captureAndSend();
@@ -444,14 +567,14 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
     });
     return false;
   }
-  
+
   // DOM_EXTRACT - 提取 DOM（兼容旧消息）
   if (message.type === 'DOM_EXTRACT') {
     captureAndSend();
     sendResponse({ status: 'scanned' });
     return false;
   }
-  
+
   // EXECUTE_PAGE_ACTION - 执行页面操作
   if (message.type === 'EXECUTE_PAGE_ACTION') {
     executePageAction(message.payload).then(result => {
@@ -459,11 +582,11 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
     });
     return true; // 异步响应
   }
-  
+
   // FILL_CONTENT - 填充内容
   if (message.type === 'FILL_CONTENT') {
     const { content, selector, humanLike, delay } = message.payload;
-    
+
     executePageAction({
       type: 'fill',
       selector: selector,
@@ -474,14 +597,14 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
     });
     return true;
   }
-  
+
   // GET_SELECTION - 获取选中文本
   if (message.type === 'GET_SELECTION') {
     const selection = window.getSelection()?.toString() || '';
     sendResponse({ text: selection });
     return false;
   }
-  
+
   // UI_UPDATE - 兼容旧消息格式
   if (message.type === 'UI_UPDATE' && message.payload?.action === 'fill_draft') {
     const activeEl = document.activeElement as HTMLElement;
@@ -495,13 +618,13 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
     sendResponse({ status: 'filled' });
     return false;
   }
-  
+
   // DELETE_REPLY - 删除回复（保留原有逻辑）
   if (message.type === 'DELETE_REPLY') {
     handleDeleteReply(message.payload, sendResponse);
     return true;
   }
-  
+
   return false;
 });
 
@@ -510,7 +633,7 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
  */
 const handleDeleteReply = (payload: any, sendResponse: (response: any) => void) => {
   const { replyContent, originalAuthor, elementSelector } = payload;
-  
+
   const findButtonByText = (texts: string[]): HTMLElement | null => {
     const allButtons = Array.from(document.querySelectorAll('button, [role="button"], [role="menuitem"]'));
     for (const btn of allButtons) {
@@ -548,7 +671,7 @@ const handleDeleteReply = (payload: any, sendResponse: (response: any) => void) 
   // 策略 2: 按内容查找
   const searchText = replyContent.substring(0, Math.min(50, replyContent.length));
   const allElements = Array.from(document.querySelectorAll('article, [data-testid*="tweet"], [data-testid*="reply"]'));
-  
+
   for (const container of allElements) {
     if (container.textContent?.includes(searchText)) {
       const menuBtn = container.querySelector('[aria-label*="More" i], [data-testid*="more" i]') as HTMLElement;
@@ -580,9 +703,12 @@ const handleDeleteReply = (payload: any, sendResponse: (response: any) => void) 
 const initialize = () => {
   if (isInitialized) return;
   isInitialized = true;
-  
+
   console.log(`[ContentScript] Initialized v${CONTENT_SCRIPT_VERSION}`);
-  
+
+  // 加载设置
+  loadSettings();
+
   // 初始扫描
   setTimeout(captureAndSend, 1000);
 };

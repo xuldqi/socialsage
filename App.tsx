@@ -252,6 +252,37 @@ const App: React.FC = () => {
                     // For now, we rely on the context.capturedContext for the Page Inspector.
                 }
 
+                // Handle QUICK_ACTION from context menu or selection popup
+                if (message.type === 'QUICK_ACTION' && message.action && message.text) {
+                    // Switch to chat tab and send the action as a message
+                    setExternalActiveTab('chat');
+                    const actionText = message.text;
+                    let prompt = '';
+                    switch (message.action) {
+                        case 'explain':
+                            prompt = `解释这段内容：\n\n"${actionText}"`;
+                            break;
+                        case 'translate':
+                            prompt = `翻译这段内容：\n\n"${actionText}"`;
+                            break;
+                        case 'summarize':
+                            prompt = `总结这段内容：\n\n"${actionText}"`;
+                            break;
+                        case 'rewrite':
+                            prompt = `改写这段内容：\n\n"${actionText}"`;
+                            break;
+                        default:
+                            prompt = actionText;
+                    }
+                    setInitialChatMsgs([`💡 正在处理: ${message.action === 'explain' ? '解释' : message.action === 'translate' ? '翻译' : message.action === 'summarize' ? '总结' : '改写'}...\n\n"${actionText.substring(0, 100)}${actionText.length > 100 ? '...' : ''}"`]);
+                    // Store the full prompt for the sidebar to process
+                    setContext(prev => ({
+                        ...prev,
+                        quickActionPrompt: prompt,
+                        selection: actionText
+                    }));
+                }
+
                 // Handle reply selector from content script (after sending reply)
                 if (message.type === 'REPLY_SELECTOR' && message.payload) {
                     const { selector, draft } = message.payload;
