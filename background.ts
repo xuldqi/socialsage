@@ -60,6 +60,8 @@ const MENU_TRANSLATIONS: Record<string, Record<string, string>> = {
 // Context Menu
 // ============================================
 async function createContextMenus() {
+  /* 
+  // CONTEXT MENU DISABLED BY USER REQUEST
   // Get user language setting
   let lang = 'en';
   try {
@@ -70,44 +72,11 @@ async function createContextMenus() {
   } catch { }
 
   const t = MENU_TRANSLATIONS[lang] || MENU_TRANSLATIONS.en;
+  */
 
   // Remove existing menus first
   chrome.contextMenus.removeAll(() => {
-    // Parent menu
-    chrome.contextMenus.create({
-      id: 'socialsage-parent',
-      title: 'SocialSage AI',
-      contexts: ['selection']
-    });
-
-    // Sub-menus
-    chrome.contextMenus.create({
-      id: 'socialsage-explain',
-      parentId: 'socialsage-parent',
-      title: t.explain,
-      contexts: ['selection']
-    });
-
-    chrome.contextMenus.create({
-      id: 'socialsage-translate',
-      parentId: 'socialsage-parent',
-      title: t.translate,
-      contexts: ['selection']
-    });
-
-    chrome.contextMenus.create({
-      id: 'socialsage-summarize',
-      parentId: 'socialsage-parent',
-      title: t.summarize,
-      contexts: ['selection']
-    });
-
-    chrome.contextMenus.create({
-      id: 'socialsage-rewrite',
-      parentId: 'socialsage-parent',
-      title: t.rewrite,
-      contexts: ['selection']
-    });
+    // Do nothing - do not create menus
   });
 }
 

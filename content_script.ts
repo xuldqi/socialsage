@@ -8,7 +8,7 @@
  * - 与 Sidebar 通信
  */
 
-import { scanPage } from './services/pageExtractor';
+import { scanPage, extractSocialPost } from './services/pageExtractor';
 import { ExtensionMessage, CapturedContext } from './types';
 import { PageAction, ActionResult, PageActionType } from './types/messaging';
 
@@ -126,6 +126,13 @@ const captureAndSend = () => {
         ...context.userFocus,
         selectionText: selection
       };
+    }
+
+    // *** CRITICAL FIX: Extract Social Post Data ***
+    // This allows the sidebar to show "Reply" and "Clone Persona" cards
+    const postData = extractSocialPost(document.body);
+    if (postData) {
+      context.postData = postData;
     }
 
     lastCapturedContext = context;
@@ -444,11 +451,17 @@ const hideSelectionPopup = () => {
 // ============================================
 
 /**
- * 监听鼠标抬起，显示划词弹窗
+ * 监听鼠标抬起，触发页面扫描 (用于更新 Sidebar)
+ * *用户已禁用划词弹窗*
  */
 document.addEventListener('mouseup', (e) => {
   // 延迟检查选中文本，让选择完成
   setTimeout(() => {
+    // 总是触发一次扫描，以便 Sidebar 获得最新的 Selection 和 Post Data
+    captureAndSend();
+
+    /* 
+    // SELECTION POPUP DISABLED BY USER REQUEST
     const selection = window.getSelection();
     const selectedText = selection?.toString().trim();
 
@@ -467,6 +480,7 @@ document.addEventListener('mouseup', (e) => {
         );
       }
     }
+    */
   }, 10);
 });
 

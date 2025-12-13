@@ -27,11 +27,11 @@ const isElementVisible = (el: HTMLElement): boolean => {
 const isInteractive = (el: HTMLElement): boolean => {
     const tag = el.tagName.toLowerCase();
     const role = el.getAttribute('role');
-    
+
     if (['button', 'a', 'input', 'textarea', 'select', 'details'].includes(tag)) return true;
     if (role && ['button', 'link', 'checkbox', 'menuitem', 'tab'].includes(role)) return true;
     if (el.getAttribute('contenteditable') === 'true') return true;
-    
+
     // Check for event listeners is hard in pure JS without hacking prototypes, 
     // but we can check for cursor style as a strong hint.
     const style = window.getComputedStyle(el);
@@ -62,7 +62,7 @@ const traverseDom = (root: HTMLElement | Element, options: ExtractOptions): DomN
     // Recursive builder to reconstruct tree from Walker (Walker is flat-ish, we need hierarchy)
     // Actually, simple recursion on the root's children is often cleaner for "Snapshotting" 
     // provided we manually apply the filters.
-    
+
     return buildTreeRecursive(root as HTMLElement, 0, options.maxDepth || 6);
 };
 
@@ -78,7 +78,7 @@ const buildTreeRecursive = (el: HTMLElement, depth: number, maxDepth: number): D
         // Check Visibility
         const rect = child.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0 || child.style.display === 'none') continue;
-        
+
         // Build Node
         const summary: DomNodeSummary = {
             nodeId: child.id || `gen_${Math.random().toString(36).substr(2, 5)}`,
@@ -108,7 +108,7 @@ const buildTreeRecursive = (el: HTMLElement, depth: number, maxDepth: number): D
                 directText += n.textContent.trim() + " ";
             }
         });
-        
+
         if (directText.length > 0) {
             summary.text = directText.trim().substring(0, 200); // Truncate for token efficiency
         }
@@ -154,16 +154,61 @@ const extractMetadata = (): PageMetadata => {
 const extractMainContent = (root: HTMLElement): string => {
     // Simple density Analysis: find the container with most p tags or text length
     // For the simulation, usually the social posts are in articles.
-    
+
+    // X/Twitter Specific Extraction
+    if (window.location.hostname.includes('twitter.com') || window.location.hostname.includes('x.com')) {
+        const activeTweet = root.querySelector('article[data-testid="tweet"]');
+        if (activeTweet) {
+            return (activeTweet as HTMLElement).innerText;
+        }
+    }
+
     const articles = root.querySelectorAll('article, [role="article"], .post-content');
     if (articles.length > 0) {
         return Array.from(articles).map(a => (a as HTMLElement).innerText).join('\n\n---\n\n');
     }
-    
+
     // Fallback: Get body text but try to exclude nav/footer
     // Since we are scoping to 'root', we assume 'root' IS the content container in the sim.
-    return root.innerText.substring(0, 5000); 
+    return root.innerText.substring(0, 5000);
 };
+
+// New Helper: Extract specific post data structure
+export const extractSocialPost = (root: HTMLElement = document.body): any => {
+    // X/Twitter
+    if (window.location.hostname.includes('twitter.com') || window.location.hostname.includes('x.com')) {
+        // Try to find the "focused" tweet (one that contains selection or is in view)
+        const selection = window.getSelection();
+        let targetNode = selection?.anchorNode?.parentElement;
+        // Search up for article
+        const tweetArticle = targetNode?.closest('article[data-testid="tweet"]');
+
+        if (tweetArticle) {
+            const textElement = tweetArticle.querySelector('div[data-testid="tweetText"]');
+            const userElement = tweetArticle.querySelector('div[data-testid="User-Name"]');
+            const timeElement = tweetArticle.querySelector('time');
+            const avatarImg = tweetArticle.querySelector('div[data-testid="Tweet-User-Avatar"] img');
+            const likeElement = tweetArticle.querySelector('div[data-testid="like"]');
+            const replyElement = tweetArticle.querySelector('div[data-testid="reply"]');
+
+            // Extract User Info
+            const userInfoText = (userElement as HTMLElement)?.innerText || '';
+            const [name, handle] = userInfoText.split('\n');
+
+            return {
+                id: timeElement?.parentElement?.getAttribute('href') || Date.now().toString(),
+                platform: 'X',
+                author: handle || name || 'Unknown',
+                content: (textElement as HTMLElement)?.innerText || '',
+                timestamp: timeElement?.getAttribute('datetime') || new Date().toISOString(),
+                likes: likeElement?.getAttribute('aria-label') || '0',
+                comments: replyElement?.getAttribute('aria-label') || '0',
+                avatarUrl: avatarImg?.getAttribute('src') || ''
+            };
+        }
+    }
+    return null;
+}
 
 // --- PUBLIC API ---
 
@@ -173,7 +218,7 @@ export const scanPage = (rootElement?: HTMLElement): CapturedContext => {
     const domTree = buildTreeRecursive(targetRoot, 0, 4); // Limit depth to 4 for performance in UI
     const mainContent = extractMainContent(targetRoot);
     const metadata = extractMetadata(); // Note: Reads global document head
-    
+
     // Calculate page state
     const state: PageState = {
         scrollY: window.scrollY,
