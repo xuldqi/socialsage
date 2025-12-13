@@ -1548,52 +1548,13 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                             )}
                         </div>
 
-                        {/* PAGE INSPECTOR (NEW) - Shows captured Context */}
-                        {context.capturedContext && !context.postData && (
+                        {/* PAGE INSPECTOR - Hidden for simplified UI */}
+                        {/* Uncomment below if you need DOM debugging */}
+                        {/* context.capturedContext && !context.postData && (
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
-                                <div className="p-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('card_page_inspector')}</span>
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                        <span className="text-[9px] font-mono text-slate-400">LIVE</span>
-                                    </div>
-                                </div>
-                                <div className="p-3 space-y-3">
-                                    {/* Metadata */}
-                                    <div className="bg-slate-50 rounded p-2 border border-slate-100">
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">METADATA</div>
-                                        <div className="grid grid-cols-2 gap-2 text-xs">
-                                            <div className="truncate"><span className="text-slate-500">Title:</span> {context.capturedContext.metadata.title}</div>
-                                            <div className="truncate"><span className="text-slate-500">Lang:</span> {context.capturedContext.metadata.language}</div>
-                                            <div className="truncate col-span-2"><span className="text-slate-500">Desc:</span> {context.capturedContext.metadata.description}</div>
-                                        </div>
-                                    </div>
-
-                                    {/* DOM Tree Visualizer (Simplified) */}
-                                    <div className="bg-[#1e1e1e] rounded p-3 border border-slate-800 font-mono text-[10px] text-slate-300 overflow-x-auto shadow-inner">
-                                        <div className="text-[9px] font-bold text-slate-500 uppercase mb-2 border-b border-slate-700 pb-1">COMPRESSED DOM SNAPSHOT</div>
-                                        {context.capturedContext.domTree.map((node, i) => (
-                                            <div key={i} className="whitespace-pre">
-                                                <span className="text-blue-400">&lt;{node.tag}</span>
-                                                {node.classes && node.classes.length > 0 && <span className="text-yellow-400"> class="{node.classes.join(' ')}"</span>}
-                                                <span className="text-blue-400">&gt;</span>
-                                                {node.children && node.children.map((child, j) => (
-                                                    <div key={j} className="pl-4 border-l border-slate-700 ml-1 hover:bg-white/5">
-                                                        <span className="text-blue-400">&lt;{child.tag}</span>
-                                                        {child.classes && child.classes.length > 0 && <span className="text-yellow-400"> class="{child.classes[0]}..."</span>}
-                                                        <span className="text-blue-400">&gt;</span>
-                                                        {child.text && <span className="text-white"> {child.text.substring(0, 30)}...</span>}
-                                                        {child.children && <span className="text-slate-500"> ...({child.children.length})</span>}
-                                                        <span className="text-blue-400">&lt;/{child.tag}&gt;</span>
-                                                    </div>
-                                                ))}
-                                                <div className="text-blue-400">&lt;/{node.tag}&gt;</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                ... DOM Inspector code ...
                             </div>
-                        )}
+                        ) */}
 
                         {/* Draft Assistant */}
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ring-1 ring-slate-100">
