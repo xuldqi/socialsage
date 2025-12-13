@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Persona, SocialPost, AutoRule, Platform, ExtensionContext, UserSettings, SystemLog, SystemOperation, ExtensionMessage, MemoryItem, AgentAction, AutoPilotStatus, ExtensionTab, ReplyHistory } from './types';
 import BrowserSimulation from './components/BrowserSimulation';
 import ExtensionSidebar from './components/ExtensionSidebar';
+import { ToastProvider } from './components/Toast';
 import { generateReply, AIConfig } from './services/geminiService';
 import { SparklesIcon, RobotIcon, UsersIcon, GlobeIcon } from './components/Icons';
 
@@ -442,138 +443,140 @@ const App: React.FC = () => {
     const handleActionsComplete = () => { setPendingAgentActions([]); };
 
     return (
-        <div className="flex h-screen bg-slate-100 overflow-hidden font-sans relative">
-            {/* Onboarding Overlay Logic ... */}
-            {showOnboarding && (
-                <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden relative">
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
-                            <h1 className="text-xl font-bold mb-1">{t('welcome_title')}</h1>
-                            <p className="text-indigo-100 text-sm">{t('welcome_subtitle')}</p>
-                        </div>
+        <ToastProvider>
+            <div className="flex h-screen bg-slate-100 overflow-hidden font-sans relative">
+                {/* Onboarding Overlay Logic ... */}
+                {showOnboarding && (
+                    <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 animate-in fade-in duration-300">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden relative">
+                            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
+                                <h1 className="text-xl font-bold mb-1">{t('welcome_title')}</h1>
+                                <p className="text-indigo-100 text-sm">{t('welcome_subtitle')}</p>
+                            </div>
 
-                        {/* Quick Start Guide */}
-                        <div className="p-4 space-y-3">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase">
-                                {settings.language === 'zh' ? '🚀 快速开始' : '🚀 Quick Start'}
-                            </h3>
-                            <div className="space-y-2">
-                                <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
-                                    <span className="text-lg shrink-0">💬</span>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-700">
-                                            {settings.language === 'zh' ? '选中帖子 → 生成回复' : 'Select Post → Generate Reply'}
-                                        </div>
-                                        <div className="text-[10px] text-slate-500">
-                                            {settings.language === 'zh' ? '在 X/Twitter 上点击帖子，然后点击"生成回复"' : 'Click a post on X, then click "Generate Reply"'}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
-                                    <span className="text-lg shrink-0">🧬</span>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-700">
-                                            {settings.language === 'zh' ? '克隆人设' : 'Clone Persona'}
-                                        </div>
-                                        <div className="text-[10px] text-slate-500">
-                                            {settings.language === 'zh' ? '分析某用户的写作风格，创建可复用人设' : 'Analyze a user\'s writing style, create reusable persona'}
+                            {/* Quick Start Guide */}
+                            <div className="p-4 space-y-3">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase">
+                                    {settings.language === 'zh' ? '🚀 快速开始' : '🚀 Quick Start'}
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
+                                        <span className="text-lg shrink-0">💬</span>
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-700">
+                                                {settings.language === 'zh' ? '选中帖子 → 生成回复' : 'Select Post → Generate Reply'}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500">
+                                                {settings.language === 'zh' ? '在 X/Twitter 上点击帖子，然后点击"生成回复"' : 'Click a post on X, then click "Generate Reply"'}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
-                                    <span className="text-lg shrink-0">📝</span>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-700">
-                                            {settings.language === 'zh' ? '内容改写' : 'Content Rewrite'}
+                                    <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
+                                        <span className="text-lg shrink-0">🧬</span>
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-700">
+                                                {settings.language === 'zh' ? '克隆人设' : 'Clone Persona'}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500">
+                                                {settings.language === 'zh' ? '分析某用户的写作风格，创建可复用人设' : 'Analyze a user\'s writing style, create reusable persona'}
+                                            </div>
                                         </div>
-                                        <div className="text-[10px] text-slate-500">
-                                            {settings.language === 'zh' ? '按人设风格改写内容，生成多个变体' : 'Rewrite content in persona style, generate variants'}
+                                    </div>
+                                    <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
+                                        <span className="text-lg shrink-0">📝</span>
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-700">
+                                                {settings.language === 'zh' ? '内容改写' : 'Content Rewrite'}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500">
+                                                {settings.language === 'zh' ? '按人设风格改写内容，生成多个变体' : 'Rewrite content in persona style, generate variants'}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="p-4 bg-slate-50 border-t border-slate-100">
-                            <p className="text-[10px] text-slate-500 mb-3">
-                                <span className="font-bold text-indigo-600">{t('free_tier')}</span> {t('free_desc')}
-                            </p>
-                            <div className="flex justify-between items-center">
-                                <select
-                                    className="bg-slate-200 text-slate-700 text-xs border border-slate-300 rounded-lg px-2 py-1.5 outline-none cursor-pointer hover:bg-slate-300"
-                                    value={settings.language}
-                                    onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
-                                >
-                                    <option value="en">English</option>
-                                    <option value="zh">简体中文</option>
-                                    <option value="ja">日本語</option>
-                                </select>
-                                <button
-                                    onClick={() => { localStorage.setItem('socialsage_onboarded', 'true'); setShowOnboarding(false); }}
-                                    className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-[1.02] shadow-lg text-sm"
-                                >
-                                    {t('get_started')}
-                                </button>
+                            <div className="p-4 bg-slate-50 border-t border-slate-100">
+                                <p className="text-[10px] text-slate-500 mb-3">
+                                    <span className="font-bold text-indigo-600">{t('free_tier')}</span> {t('free_desc')}
+                                </p>
+                                <div className="flex justify-between items-center">
+                                    <select
+                                        className="bg-slate-200 text-slate-700 text-xs border border-slate-300 rounded-lg px-2 py-1.5 outline-none cursor-pointer hover:bg-slate-300"
+                                        value={settings.language}
+                                        onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
+                                    >
+                                        <option value="en">English</option>
+                                        <option value="zh">简体中文</option>
+                                        <option value="ja">日本語</option>
+                                    </select>
+                                    <button
+                                        onClick={() => { localStorage.setItem('socialsage_onboarded', 'true'); setShowOnboarding(false); }}
+                                        className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-[1.02] shadow-lg text-sm"
+                                    >
+                                        {t('get_started')}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Left: Browser Simulation (Only in Simulator Mode) */}
-            {DEPLOY_MODE === 'simulator' && (
-                <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                    <BrowserSimulation
-                        posts={posts}
-                        activeContextId={context.postData?.id}
-                        onContextChange={setContext}
-                        onUpdatePost={handleUpdatePost}
-                        onSaveToMemory={(text) => handleSaveMemory(text, context.pageData?.url)}
-                        pendingActions={pendingAgentActions}
-                        onActionComplete={handleActionsComplete}
-                        onLearnStyle={handleLearnStyle}
+                {/* Left: Browser Simulation (Only in Simulator Mode) */}
+                {DEPLOY_MODE === 'simulator' && (
+                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                        <BrowserSimulation
+                            posts={posts}
+                            activeContextId={context.postData?.id}
+                            onContextChange={setContext}
+                            onUpdatePost={handleUpdatePost}
+                            onSaveToMemory={(text) => handleSaveMemory(text, context.pageData?.url)}
+                            pendingActions={pendingAgentActions}
+                            onActionComplete={handleActionsComplete}
+                            onLearnStyle={handleLearnStyle}
+                            settings={settings}
+                            agentThinking={context.agentThinking}
+                        />
+                    </div>
+                )}
+
+                {/* Right: Sidebar (Full Width in Extension Mode) */}
+                <aside className={`${DEPLOY_MODE === 'simulator' ? 'w-[400px]' : 'w-full'} shrink-0 h-full shadow-2xl z-20 transition-all duration-300 transform translate-x-0`}>
+                    <ExtensionSidebar
+                        context={context}
+                        personas={personas}
+                        defaultPersonaId={defaultPersonaId}
+                        rules={rules}
+                        memories={memories}
                         settings={settings}
-                        agentThinking={context.agentThinking}
+                        systemLogs={systemLogs}
+                        isAutoPilot={isAutoPilot}
+                        posts={posts}
+                        hasConfiguredAutoPilot={hasConfiguredAutoPilot}
+                        externalActiveTab={externalActiveTab}
+                        initialChatMsgs={initialChatMsgs}
+                        onUpdateSettings={setSettings}
+                        onApplyDraft={handleApplyDraft}
+                        onPerformOperations={handlePerformOperations}
+                        onAddMemory={(c) => handleSaveMemory(c)}
+                        onDeleteMemory={handleDeleteMemory}
+                        onToggleAutoPilot={handleToggleAutoPilot}
+                        onExecuteAgent={handleExecuteAgentActions}
+                        onUpdateRule={handleUpdateRule}
+                        onDeleteRule={handleDeleteRule}
+                        onUpdatePersona={handleUpdatePersona}
+                        onCreatePersona={handleCreatePersona}
+                        onDeletePersona={handleDeletePersona}
+                        onSetDefaultPersona={setDefaultPersonaId}
+                        onAddSystemLog={addSystemLog}
+                        onUpdatePost={handleUpdatePost}
+                        replyHistory={replyHistory}
+                        onDeleteReply={handleDeleteReply}
+                        onRecordReply={recordReply}
                     />
-                </div>
-            )}
-
-            {/* Right: Sidebar (Full Width in Extension Mode) */}
-            <aside className={`${DEPLOY_MODE === 'simulator' ? 'w-[400px]' : 'w-full'} shrink-0 h-full shadow-2xl z-20 transition-all duration-300 transform translate-x-0`}>
-                <ExtensionSidebar
-                    context={context}
-                    personas={personas}
-                    defaultPersonaId={defaultPersonaId}
-                    rules={rules}
-                    memories={memories}
-                    settings={settings}
-                    systemLogs={systemLogs}
-                    isAutoPilot={isAutoPilot}
-                    posts={posts}
-                    hasConfiguredAutoPilot={hasConfiguredAutoPilot}
-                    externalActiveTab={externalActiveTab}
-                    initialChatMsgs={initialChatMsgs}
-                    onUpdateSettings={setSettings}
-                    onApplyDraft={handleApplyDraft}
-                    onPerformOperations={handlePerformOperations}
-                    onAddMemory={(c) => handleSaveMemory(c)}
-                    onDeleteMemory={handleDeleteMemory}
-                    onToggleAutoPilot={handleToggleAutoPilot}
-                    onExecuteAgent={handleExecuteAgentActions}
-                    onUpdateRule={handleUpdateRule}
-                    onDeleteRule={handleDeleteRule}
-                    onUpdatePersona={handleUpdatePersona}
-                    onCreatePersona={handleCreatePersona}
-                    onDeletePersona={handleDeletePersona}
-                    onSetDefaultPersona={setDefaultPersonaId}
-                    onAddSystemLog={addSystemLog}
-                    onUpdatePost={handleUpdatePost}
-                    replyHistory={replyHistory}
-                    onDeleteReply={handleDeleteReply}
-                    onRecordReply={recordReply}
-                />
-            </aside>
-        </div>
+                </aside>
+            </div>
+        </ToastProvider>
     );
 };
 

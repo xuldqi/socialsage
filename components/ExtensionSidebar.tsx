@@ -5,6 +5,7 @@ import { SparklesIcon, RobotIcon, UsersIcon, EditIcon, ZapIcon, SendIcon, Refres
 import RuleBuilder from './RuleBuilder';
 import PersonaManager from './PersonaManager';
 import PostGenerator from './PostGenerator';
+import { useToast } from './Toast';
 
 declare const chrome: any;
 
@@ -374,6 +375,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
     onUpdateSettings, onApplyDraft, onPerformOperations, onAddMemory, onDeleteMemory, onToggleAutoPilot, onExecuteAgent, onUpdateRule, onDeleteRule, onUpdatePersona, onCreatePersona, onDeletePersona, onSetDefaultPersona,
     onAddSystemLog, onUpdatePost, replyHistory = [], onDeleteReply, onRecordReply
 }) => {
+    const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<ExtensionTab>('context'); // Default Context First
     const [contentSubTab, setContentSubTab] = useState<'rewrite' | 'knowledge'>('rewrite');
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -724,6 +726,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
         onApplyDraft(context.postData.id, draft);
         setTransferStatus('success');
         logBus('SidePanel', 'ContentScript', 'UI_UPDATE', { action: 'fill_draft' });
+        showToast(settings.language === 'zh' ? '已开始安全填充 (模拟打字)' : 'Safe fill started (Typing simulation)', 'success');
     };
 
     const handleContextAction = (action: string) => {
@@ -865,6 +868,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
 
     const handleCopyMessage = (content: string) => {
         navigator.clipboard.writeText(content);
+        showToast(settings.language === 'zh' ? '已复制' : 'Copied', 'success');
         onAddSystemLog('User Action', 'Copied message to clipboard', 'User');
     };
 
@@ -1679,6 +1683,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                                                             sourceUrl: context.pageData?.url || ''
                                                         });
                                                         setAnalyzedPersona(null);
+                                                        showToast(settings.language === 'zh' ? '人设已保存' : 'Persona saved', 'success');
                                                     }
                                                 }}
                                                 className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-1"
@@ -1775,7 +1780,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                                             <RefreshIcon className="w-3 h-3" />
                                         </button>
                                     )}
-                                    <button onClick={() => navigator.clipboard.writeText(draft)} className="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Copy">
+                                    <button onClick={() => { navigator.clipboard.writeText(draft); showToast(settings.language === 'zh' ? '已复制' : 'Copied', 'success'); }} className="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Copy">
                                         <CopyIcon className="w-3 h-3" />
                                     </button>
                                 </div>
@@ -1876,9 +1881,9 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                                             placeholder={t('mem_placeholder')}
                                             value={memoryInput}
                                             onChange={e => setMemoryInput(e.target.value)}
-                                            onKeyDown={e => { if (e.key === 'Enter' && memoryInput) { onAddMemory(memoryInput); setMemoryInput(''); } }}
+                                            onKeyDown={e => { if (e.key === 'Enter' && memoryInput) { onAddMemory(memoryInput); setMemoryInput(''); showToast(settings.language === 'zh' ? '已添加到知识库' : 'Added to knowledge base', 'success'); } }}
                                         />
-                                        <button onClick={() => { if (memoryInput) { onAddMemory(memoryInput); setMemoryInput(''); } }} className="bg-slate-900 text-white px-3 rounded-lg font-bold text-xs">{t('mem_add')}</button>
+                                        <button onClick={() => { if (memoryInput) { onAddMemory(memoryInput); setMemoryInput(''); showToast(settings.language === 'zh' ? '已添加到知识库' : 'Added to knowledge base', 'success'); } }} className="bg-slate-900 text-white px-3 rounded-lg font-bold text-xs">{t('mem_add')}</button>
                                     </div>
                                     <div className="space-y-2">
                                         {memories.map(m => (

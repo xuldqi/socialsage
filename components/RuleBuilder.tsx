@@ -3,6 +3,7 @@
 import React from 'react';
 import { AutoRule, Persona, Platform } from '../types';
 import { ZapIcon, EditIcon, TrashIcon } from './Icons';
+import { useToast } from './Toast';
 
 interface RuleBuilderProps {
   rules: AutoRule[];
@@ -70,6 +71,7 @@ const TRANSLATIONS: Record<string, any> = {
 };
 
 const RuleBuilder: React.FC<RuleBuilderProps> = ({ rules, personas, onUpdateRule, onDeleteRule, language = 'en' }) => {
+  const { showToast } = useToast();
   const t = (key: string) => TRANSLATIONS[language]?.[key] || TRANSLATIONS['en'][key];
 
   return (
@@ -100,7 +102,7 @@ const RuleBuilder: React.FC<RuleBuilderProps> = ({ rules, personas, onUpdateRule
                 </div>
                 <div className="flex items-center space-x-3">
                   <button
-                    onClick={() => { if (window.confirm(t('delete_confirm'))) onDeleteRule(rule.id) }}
+                    onClick={() => { if (window.confirm(t('delete_confirm'))) { onDeleteRule(rule.id); showToast(language === 'zh' ? '已删除' : 'Deleted', 'info'); } }}
                     className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                     title="Delete Rule"
                   >
