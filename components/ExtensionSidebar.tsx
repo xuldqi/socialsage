@@ -1544,202 +1544,173 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
 
                 {/* TAB: ASSIST (Context) */}
                 {activeTab === 'context' && (
-                    <div className="h-full overflow-y-auto p-4 space-y-6">
-                        {/* Page Context Card */}
+                    <div className="h-full overflow-y-auto p-4 space-y-4">
+
+                        {/* Step 1: Selection / Reply Target */}
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="p-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    {context.postData ? t('card_target_post') : t('card_current_page')}
-                                </span>
-                                {context.postData && (
-                                    <button onClick={handleAnalyzeStyle} disabled={isGenerating} className="text-[10px] flex items-center text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded transition-colors font-bold">
-                                        <UserPlusIcon className="w-3 h-3 mr-1" /> {t('btn_clone')}
-                                    </button>
-                                )}
+                            <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-100">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-lg">💬</span>
+                                        <span className="text-sm font-bold text-slate-700">
+                                            {settings.language === 'zh' ? '回复目标' : settings.language === 'ja' ? '返信対象' : 'Reply Target'}
+                                        </span>
+                                    </div>
+                                    {(context.selection || context.postData?.content) && (
+                                        <button
+                                            onClick={() => {
+                                                setContext(prev => ({ ...prev, selection: undefined, postData: undefined }));
+                                            }}
+                                            className="text-xs text-slate-400 hover:text-red-500 transition-colors"
+                                        >
+                                            ✕ 清除
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             <div className="p-3">
-                                {context.postData ? (
-                                    <div className="space-y-2">
-                                        <p className="text-sm text-slate-700 italic line-clamp-3">"{context.postData.content}"</p>
-                                        <button
-                                            onClick={handleExtractData}
-                                            disabled={isPageProcessing}
-                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded text-xs font-bold transition-colors"
-                                        >
-                                            {isPageProcessing ? '处理中...' : t('btn_extract')}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <p className="text-xs text-slate-500 truncate">{context.pageData?.url || '正在加载页面信息...'}</p>
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={handleExtractData}
-                                                disabled={isPageProcessing}
-                                                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded text-xs font-bold transition-colors"
-                                            >
-                                                {isPageProcessing ? '处理中...' : t('btn_extract')}
-                                            </button>
-                                            {context.pageData?.type === 'video' && (
-                                                <button onClick={handleVideoSummary} disabled={isPageProcessing} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 rounded text-xs font-bold transition-colors">
-                                                    {t('btn_summarize')}
-                                                </button>
+                                {context.selection || context.postData?.content ? (
+                                    <div className="space-y-3">
+                                        <div className="bg-slate-50 rounded-lg p-3 border-l-4 border-indigo-400">
+                                            <p className="text-sm text-slate-700 leading-relaxed line-clamp-4">
+                                                "{context.selection || context.postData?.content}"
+                                            </p>
+                                            {context.postData?.author && (
+                                                <p className="text-xs text-slate-400 mt-2">— @{context.postData.author}</p>
                                             )}
                                         </div>
+                                        <button
+                                            onClick={() => context.postData && handleAutoDraft(context.postData, 'agree')}
+                                            disabled={isGenerating}
+                                            className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-bold text-sm hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center space-x-2"
+                                        >
+                                            <SparklesIcon className="w-4 h-4" />
+                                            <span>{settings.language === 'zh' ? '🤖 生成回复' : settings.language === 'ja' ? '🤖 返信を生成' : '🤖 Generate Reply'}</span>
+                                        </button>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => context.postData && handleAutoDraft(context.postData, 'question')}
+                                                disabled={isGenerating}
+                                                className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-xs font-medium transition-colors"
+                                            >
+                                                🤔 提问
+                                            </button>
+                                            <button
+                                                onClick={() => context.postData && handleAutoDraft(context.postData, 'disagree')}
+                                                disabled={isGenerating}
+                                                className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-xs font-medium transition-colors"
+                                            >
+                                                🙅 不同意
+                                            </button>
+                                            <button
+                                                onClick={() => context.postData && handleAutoDraft(context.postData, 'joke')}
+                                                disabled={isGenerating}
+                                                className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-xs font-medium transition-colors"
+                                            >
+                                                😂 幽默
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 text-slate-400">
+                                        <div className="text-3xl mb-2">👆</div>
+                                        <p className="text-sm font-medium">
+                                            {settings.language === 'zh' ? '在网页上选中文字，或点击帖子' :
+                                                settings.language === 'ja' ? 'ウェブページでテキストを選択' :
+                                                    'Select text on the webpage'}
+                                        </p>
+                                        <p className="text-xs text-slate-300 mt-1">
+                                            {settings.language === 'zh' ? '选中的内容会显示在这里' :
+                                                settings.language === 'ja' ? '選択したコンテンツがここに表示されます' :
+                                                    'Selected content will appear here'}
+                                        </p>
                                     </div>
                                 )}
                             </div>
+                        </div>
 
-                            {/* Analysis Results */}
-                            {analyzedPersona && (
-                                <div className="px-3 pb-3 animate-in slide-in-from-top-2">
-                                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2">
-                                        <div className="flex justify-between items-start">
-                                            <span className="text-[10px] font-bold text-indigo-400 uppercase">{t('card_detected_persona')}</span>
-                                            <button onClick={() => onCreatePersona({ id: Date.now().toString(), name: analyzedPersona.name!, description: analyzedPersona.description!, tone: analyzedPersona.tone!, exampleText: analyzedPersona.exampleText! })} className="text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded">{t('lbl_save')}</button>
-                                        </div>
-                                        <p className="text-xs font-bold text-indigo-900 mt-1">{analyzedPersona.name} <span className="font-normal text-indigo-600">({analyzedPersona.tone})</span></p>
-                                    </div>
-                                </div>
-                            )}
+                        {/* Step 2: AI Draft (Only show when there's content) */}
 
-                            {/* Extracted Data Results */}
-                            {extractedData && (
-                                <div className="px-3 pb-3 animate-in slide-in-from-top-2">
-                                    <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="text-[10px] font-bold text-emerald-500 uppercase">📊 提取结果</span>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(extractedData);
-                                                }}
-                                                className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded hover:bg-emerald-700"
-                                            >
-                                                复制
-                                            </button>
-                                        </div>
-                                        <pre className="text-xs text-emerald-900 whitespace-pre-wrap font-mono bg-white/50 rounded p-2 max-h-48 overflow-auto">
-                                            {typeof extractedData === 'string' ? extractedData : JSON.stringify(extractedData, null, 2)}
-                                        </pre>
-                                    </div>
+                        {/* Draft Input Area */}
+                        <div className="relative group">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 transition-opacity group-focus-within:opacity-100"></div>
+
+                            {/* Draft Header */}
+                            <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/30 border-b border-indigo-100/50">
+                                <div className="flex items-center space-x-2">
+                                    <SparklesIcon className="w-3 h-3 text-indigo-500" />
+                                    <span className="text-xs font-bold text-indigo-900">{t('card_ai_draft')}</span>
+                                    {usedMemoryForDraft && (
+                                        <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full flex items-center" title={usedMemoryForDraft.content}>
+                                            <BrainIcon className="w-2 h-2 mr-1" /> Context
+                                        </span>
+                                    )}
                                 </div>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={handleRefineDraft}
+                                        className="flex items-center space-x-1 px-2 py-1 bg-white border border-indigo-200 rounded text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                        title="Smart Polish: Improve grammar while maintaining Persona tone"
+                                    >
+                                        <MagicIcon className="w-3 h-3" />
+                                        <span>{t('btn_refine')}</span>
+                                    </button>
+                                    {lastIntent && (
+                                        <button onClick={() => context.postData && handleAutoDraft(context.postData, lastIntent)} className="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Regenerate">
+                                            <RefreshIcon className="w-3 h-3" />
+                                        </button>
+                                    )}
+                                    <button onClick={() => navigator.clipboard.writeText(draft)} className="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Copy">
+                                        <CopyIcon className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {isGenerating ? (
+                                <div className="h-32 flex flex-col items-center justify-center text-indigo-600 space-y-2 bg-white">
+                                    <SparklesIcon className="w-6 h-6 animate-spin" />
+                                    <span className="text-xs font-bold animate-pulse">{t('msg_crafting')}</span>
+                                    <button
+                                        onClick={handleStopGeneration}
+                                        className="flex items-center space-x-1 px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold hover:bg-red-100 mt-2"
+                                    >
+                                        <StopIcon className="w-3 h-3" />
+                                        <span>{t('btn_stop_edit')}</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <textarea
+                                    className="w-full h-32 p-3 text-sm text-slate-700 resize-none outline-none bg-white"
+                                    placeholder={t('placeholder_draft')}
+                                    value={draft}
+                                    onChange={(e) => setDraft(e.target.value)}
+                                />
                             )}
                         </div>
 
-                        {/* PAGE INSPECTOR - Hidden for simplified UI */}
-                        {/* Uncomment below if you need DOM debugging */}
-                        {/* context.capturedContext && !context.postData && (
-                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
-                                ... DOM Inspector code ...
-                            </div>
-                        ) */}
-
-                        {/* Draft Assistant */}
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ring-1 ring-slate-100">
-                            {/* Quick Actions */}
-                            {context.postData && (
-                                <div className="p-2 bg-slate-50 border-b border-slate-100">
-                                    <div className="flex justify-between items-center mb-2 px-1">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase">{t('card_quick_draft')}</span>
-                                        <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1 rounded">{t('lbl_auto_detect')}</span>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {INTENT_OPTIONS.map(opt => (
-                                            <button
-                                                key={opt.id}
-                                                onClick={() => handleAutoDraft(context.postData!, opt.id)}
-                                                disabled={isGenerating}
-                                                className={`py-1.5 rounded border text-xs font-medium transition-all active:scale-95
-                                            ${lastIntent === opt.id ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'}`}
-                                            >
-                                                {opt.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Draft Input Area */}
-                            <div className="relative group">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 transition-opacity group-focus-within:opacity-100"></div>
-
-                                {/* Draft Header */}
-                                <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/30 border-b border-indigo-100/50">
-                                    <div className="flex items-center space-x-2">
-                                        <SparklesIcon className="w-3 h-3 text-indigo-500" />
-                                        <span className="text-xs font-bold text-indigo-900">{t('card_ai_draft')}</span>
-                                        {usedMemoryForDraft && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full flex items-center" title={usedMemoryForDraft.content}>
-                                                <BrainIcon className="w-2 h-2 mr-1" /> Context
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={handleRefineDraft}
-                                            className="flex items-center space-x-1 px-2 py-1 bg-white border border-indigo-200 rounded text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                            title="Smart Polish: Improve grammar while maintaining Persona tone"
-                                        >
-                                            <MagicIcon className="w-3 h-3" />
-                                            <span>{t('btn_refine')}</span>
-                                        </button>
-                                        {lastIntent && (
-                                            <button onClick={() => context.postData && handleAutoDraft(context.postData, lastIntent)} className="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Regenerate">
-                                                <RefreshIcon className="w-3 h-3" />
-                                            </button>
-                                        )}
-                                        <button onClick={() => navigator.clipboard.writeText(draft)} className="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Copy">
-                                            <CopyIcon className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {isGenerating ? (
-                                    <div className="h-32 flex flex-col items-center justify-center text-indigo-600 space-y-2 bg-white">
-                                        <SparklesIcon className="w-6 h-6 animate-spin" />
-                                        <span className="text-xs font-bold animate-pulse">{t('msg_crafting')}</span>
-                                        <button
-                                            onClick={handleStopGeneration}
-                                            className="flex items-center space-x-1 px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold hover:bg-red-100 mt-2"
-                                        >
-                                            <StopIcon className="w-3 h-3" />
-                                            <span>{t('btn_stop_edit')}</span>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <textarea
-                                        className="w-full h-32 p-3 text-sm text-slate-700 resize-none outline-none bg-white"
-                                        placeholder={t('placeholder_draft')}
-                                        value={draft}
-                                        onChange={(e) => setDraft(e.target.value)}
-                                    />
-                                )}
-                            </div>
-
-                            {/* Footer Actions */}
-                            <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-end items-center space-x-2">
-                                {transferStatus === 'success' ? (
-                                    <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-sm flex items-center cursor-default">
-                                        <CheckIcon className="w-3 h-3 mr-1.5" /> {t('btn_protected')}
+                        {/* Footer Actions */}
+                        <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-end items-center space-x-2">
+                            {transferStatus === 'success' ? (
+                                <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-sm flex items-center cursor-default">
+                                    <CheckIcon className="w-3 h-3 mr-1.5" /> {t('btn_protected')}
+                                </button>
+                            ) : (
+                                <>
+                                    {!context.postData && (
+                                        <span className="text-[10px] text-orange-500 mr-auto font-medium flex items-center">
+                                            {t('msg_open_reply')}
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={handleTransferDraft}
+                                        disabled={!isTransferReady}
+                                        className="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all active:scale-95"
+                                        title={!context.postData ? "Open a reply box in the browser first" : "Simulate human typing"}
+                                    >
+                                        <ShieldIcon className="w-3 h-3 mr-1.5" /> {t('btn_transfer')}
                                     </button>
-                                ) : (
-                                    <>
-                                        {!context.postData && (
-                                            <span className="text-[10px] text-orange-500 mr-auto font-medium flex items-center">
-                                                {t('msg_open_reply')}
-                                            </span>
-                                        )}
-                                        <button
-                                            onClick={handleTransferDraft}
-                                            disabled={!isTransferReady}
-                                            className="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all active:scale-95"
-                                            title={!context.postData ? "Open a reply box in the browser first" : "Simulate human typing"}
-                                        >
-                                            <ShieldIcon className="w-3 h-3 mr-1.5" /> {t('btn_transfer')}
-                                        </button>
-                                    </>
-                                )}
-                            </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
@@ -2095,7 +2066,7 @@ const ExtensionSidebar: React.FC<ExtensionSidebarProps> = ({
                 )}
 
             </div>
-        </div>
+        </div >
     );
 };
 
