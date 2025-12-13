@@ -136,17 +136,33 @@ chrome.contextMenus.onClicked.addListener(async (info: any, tab: any) => {
   }
 
   if (action) {
-    // Open side panel first
-    await chrome.sidePanel.open({ tabId: tab.id });
+    try {
+      // Open side panel first
+      await chrome.sidePanel.open({ tabId: tab.id });
+      console.log('[Background] Side panel opened for context menu action:', action);
 
-    // Send message to side panel with the action
-    setTimeout(() => {
-      chrome.runtime.sendMessage({
-        type: 'QUICK_ACTION',
-        action: action,
-        text: selectedText
-      }).catch(() => { });
-    }, 500);
+      // Send message with retry logic
+      const sendMessage = (attempt: number) => {
+        console.log('[Background] Sending QUICK_ACTION attempt:', attempt);
+        chrome.runtime.sendMessage({
+          type: 'QUICK_ACTION',
+          action: action,
+          text: selectedText
+        }).then(() => {
+          console.log('[Background] QUICK_ACTION sent successfully');
+        }).catch((err) => {
+          console.log('[Background] QUICK_ACTION send error:', err);
+          if (attempt < 3) {
+            setTimeout(() => sendMessage(attempt + 1), 500);
+          }
+        });
+      };
+
+      // Wait for sidebar to initialize, then start sending
+      setTimeout(() => sendMessage(1), 800);
+    } catch (err) {
+      console.error('[Background] Error opening side panel:', err);
+    }
   }
 });
 

@@ -254,6 +254,7 @@ const App: React.FC = () => {
 
                 // Handle QUICK_ACTION from context menu or selection popup
                 if (message.type === 'QUICK_ACTION' && message.action && message.text) {
+                    console.log('[Sidebar] Received QUICK_ACTION:', message.action, message.text?.substring(0, 50));
                     // Switch to chat tab and send the action as a message
                     setExternalActiveTab('chat');
                     const actionText = message.text;
