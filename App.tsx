@@ -454,31 +454,31 @@ const App: React.FC = () => {
             {showOnboarding && (
                 <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 animate-in fade-in duration-300">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden relative">
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white relative">
-                            <div className="absolute top-3 right-3">
-                                <select
-                                    className="bg-white/20 text-white text-[10px] border border-white/30 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:bg-white/30"
-                                    value={settings.language}
-                                    onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
-                                >
-                                    <option value="en">EN</option>
-                                    <option value="zh">中文</option>
-                                    <option value="ja">日本語</option>
-                                </select>
-                            </div>
-                            <h1 className="text-xl font-bold mb-1 pr-12">{t('welcome_title')}</h1>
+                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                            <h1 className="text-xl font-bold mb-1">{t('welcome_title')}</h1>
                             <p className="text-indigo-100 text-sm">{t('welcome_subtitle')}</p>
                         </div>
                         <div className="p-4 bg-slate-50 border-t border-slate-100">
                             <p className="text-[10px] text-slate-500 mb-3">
                                 <span className="font-bold text-indigo-600">{t('free_tier')}</span> {t('free_desc')}
                             </p>
-                            <button
-                                onClick={() => setShowOnboarding(false)}
-                                className="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-[1.02] shadow-lg text-sm"
-                            >
-                                {t('get_started')}
-                            </button>
+                            <div className="flex justify-between items-center">
+                                <select
+                                    className="bg-slate-200 text-slate-700 text-xs border border-slate-300 rounded-lg px-2 py-1.5 outline-none cursor-pointer hover:bg-slate-300"
+                                    value={settings.language}
+                                    onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
+                                >
+                                    <option value="en">English</option>
+                                    <option value="zh">简体中文</option>
+                                    <option value="ja">日本語</option>
+                                </select>
+                                <button
+                                    onClick={() => setShowOnboarding(false)}
+                                    className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-[1.02] shadow-lg text-sm"
+                                >
+                                    {t('get_started')}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
