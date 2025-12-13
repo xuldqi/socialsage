@@ -54,6 +54,57 @@ chrome.storage.onChanged.addListener((changes: any) => {
 });
 
 // ============================================
+// Typing Simulation
+// ============================================
+
+/**
+ * 模拟打字效果 - 逐字输入，带随机延迟，看起来像真人打字
+ */
+const simulateTyping = async (element: HTMLElement, text: string) => {
+  const isTextarea = element.tagName === 'TEXTAREA';
+  const isContentEditable = element.getAttribute('contenteditable') === 'true';
+
+  if (!isTextarea && !isContentEditable) return;
+
+  // 先清空
+  if (isTextarea) {
+    (element as HTMLTextAreaElement).value = '';
+  } else {
+    element.innerText = '';
+  }
+
+  // 聚焦元素
+  element.focus();
+
+  // 逐字输入
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    // 随机延迟 (30-150ms)，模拟真实打字速度变化
+    const delay = TYPING_BASE_DELAY + Math.random() * 70 - 20;
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    if (isTextarea) {
+      (element as HTMLTextAreaElement).value += char;
+    } else {
+      element.innerText += char;
+    }
+
+    // 触发 input 事件，让网站知道内容变化了
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // 每输入几个字符触发一次 change 事件
+    if (i % 5 === 0) {
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  // 最后触发 change 事件
+  element.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
+// ============================================
 // DOM Extraction
 // ============================================
 
@@ -624,17 +675,18 @@ chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: a
     return false;
   }
 
-  // UI_UPDATE - 兼容旧消息格式
+  // UI_UPDATE - 兼容旧消息格式，带打字模拟效果
   if (message.type === 'UI_UPDATE' && message.payload?.action === 'fill_draft') {
     const activeEl = document.activeElement as HTMLElement;
+    const draftText = message.payload.draft || '';
+
     if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.getAttribute('contenteditable') === 'true')) {
-      if (activeEl.tagName === 'TEXTAREA') {
-        (activeEl as HTMLTextAreaElement).value = message.payload.draft || '';
-      } else {
-        activeEl.innerText = message.payload.draft || '';
-      }
+      // 模拟打字效果
+      simulateTyping(activeEl, draftText);
+      sendResponse({ status: 'typing_started' });
+    } else {
+      sendResponse({ status: 'no_active_input' });
     }
-    sendResponse({ status: 'filled' });
     return false;
   }
 
