@@ -197,7 +197,9 @@ const App: React.FC = () => {
     const [autoPilotTargetId, setAutoPilotTargetId] = useState<string | null>(null);
 
     const [pendingAgentActions, setPendingAgentActions] = useState<AgentAction[]>([]);
-    const [showOnboarding, setShowOnboarding] = useState(true);
+    const [showOnboarding, setShowOnboarding] = useState(() => {
+        return localStorage.getItem('socialsage_onboarded') !== 'true';
+    });
     const [hasConfiguredAutoPilot, setHasConfiguredAutoPilot] = useState(() => {
         return localStorage.getItem('socialsage_configured') === 'true';
     });
@@ -445,10 +447,53 @@ const App: React.FC = () => {
             {showOnboarding && (
                 <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 animate-in fade-in duration-300">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden relative">
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
                             <h1 className="text-xl font-bold mb-1">{t('welcome_title')}</h1>
                             <p className="text-indigo-100 text-sm">{t('welcome_subtitle')}</p>
                         </div>
+
+                        {/* Quick Start Guide */}
+                        <div className="p-4 space-y-3">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase">
+                                {settings.language === 'zh' ? '🚀 快速开始' : '🚀 Quick Start'}
+                            </h3>
+                            <div className="space-y-2">
+                                <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
+                                    <span className="text-lg shrink-0">💬</span>
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-700">
+                                            {settings.language === 'zh' ? '选中帖子 → 生成回复' : 'Select Post → Generate Reply'}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500">
+                                            {settings.language === 'zh' ? '在 X/Twitter 上点击帖子，然后点击"生成回复"' : 'Click a post on X, then click "Generate Reply"'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
+                                    <span className="text-lg shrink-0">🧬</span>
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-700">
+                                            {settings.language === 'zh' ? '克隆人设' : 'Clone Persona'}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500">
+                                            {settings.language === 'zh' ? '分析某用户的写作风格，创建可复用人设' : 'Analyze a user\'s writing style, create reusable persona'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3 p-2 bg-slate-50 rounded-lg">
+                                    <span className="text-lg shrink-0">📝</span>
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-700">
+                                            {settings.language === 'zh' ? '内容改写' : 'Content Rewrite'}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500">
+                                            {settings.language === 'zh' ? '按人设风格改写内容，生成多个变体' : 'Rewrite content in persona style, generate variants'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="p-4 bg-slate-50 border-t border-slate-100">
                             <p className="text-[10px] text-slate-500 mb-3">
                                 <span className="font-bold text-indigo-600">{t('free_tier')}</span> {t('free_desc')}
@@ -464,7 +509,7 @@ const App: React.FC = () => {
                                     <option value="ja">日本語</option>
                                 </select>
                                 <button
-                                    onClick={() => setShowOnboarding(false)}
+                                    onClick={() => { localStorage.setItem('socialsage_onboarded', 'true'); setShowOnboarding(false); }}
                                     className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-[1.02] shadow-lg text-sm"
                                 >
                                     {t('get_started')}
