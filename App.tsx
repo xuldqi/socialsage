@@ -452,27 +452,33 @@ const App: React.FC = () => {
         <div className="flex h-screen bg-slate-100 overflow-hidden font-sans relative">
             {/* Onboarding Overlay Logic ... */}
             {showOnboarding && (
-                <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden relative">
-                        <div className="absolute top-4 right-4 z-10">
-                            <select
-                                className="bg-white/20 text-white text-xs border border-white/30 rounded-lg p-1 outline-none cursor-pointer hover:bg-white/30"
-                                value={settings.language}
-                                onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
+                <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden relative">
+                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white relative">
+                            <div className="absolute top-3 right-3">
+                                <select
+                                    className="bg-white/20 text-white text-[10px] border border-white/30 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:bg-white/30"
+                                    value={settings.language}
+                                    onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
+                                >
+                                    <option value="en">EN</option>
+                                    <option value="zh">中文</option>
+                                    <option value="ja">日本語</option>
+                                </select>
+                            </div>
+                            <h1 className="text-xl font-bold mb-1 pr-12">{t('welcome_title')}</h1>
+                            <p className="text-indigo-100 text-sm">{t('welcome_subtitle')}</p>
+                        </div>
+                        <div className="p-4 bg-slate-50 border-t border-slate-100">
+                            <p className="text-[10px] text-slate-500 mb-3">
+                                <span className="font-bold text-indigo-600">{t('free_tier')}</span> {t('free_desc')}
+                            </p>
+                            <button
+                                onClick={() => setShowOnboarding(false)}
+                                className="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-[1.02] shadow-lg text-sm"
                             >
-                                <option value="en">English</option>
-                                <option value="zh">简体中文</option>
-                                <option value="ja">日本語</option>
-                            </select>
-                        </div>
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white">
-                            <h1 className="text-3xl font-bold mb-2">{t('welcome_title')}</h1>
-                            <p className="text-indigo-100">{t('welcome_subtitle')}</p>
-                        </div>
-                        {/* ... (Welcome Steps) ... */}
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                            <div className="text-[10px] text-slate-500 max-w-xs"><span className="font-bold text-indigo-600">{t('free_tier')}</span> {t('free_desc')}</div>
-                            <button onClick={() => setShowOnboarding(false)} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-transform hover:scale-105 shadow-lg">{t('get_started')}</button>
+                                {t('get_started')}
+                            </button>
                         </div>
                     </div>
                 </div>
